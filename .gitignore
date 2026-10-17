@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets: real keys live only in .env (never commit it)
+.env
+
+# Downloaded data and the search index (both can be re-created)
+data/raw/
+data/index/
+
+# Notebook and Mac clutter
+.ipynb_checkpoints/
+.DS_Store

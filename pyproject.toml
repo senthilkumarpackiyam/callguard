@@ -1,0 +1,20 @@
+[project]
+name = "callguard"
+version = "0.1.0"
+description = "RAG assistant for vulnerabilities in contact-center and UC products"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "langsmith>=0.14.11",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+]
