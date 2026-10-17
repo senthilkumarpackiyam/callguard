@@ -105,9 +105,13 @@ class Embedder:
         return [self.cache[self.key(t)] for t in texts], len(texts) - len(missing)
 
     def embed_query(self, question):
-        response = self.client.embeddings.create(model=EMBEDDING_MODEL,
-                                                 input=[f"Instruct: {QUERY_TASK}\nQuery: {question}"])
-        return response.data[0].embedding
+        text = f"Instruct: {QUERY_TASK}\nQuery: {question}"
+        if self.key(text) not in self.cache:  # asked before? reuse it
+            response = self.client.embeddings.create(model=EMBEDDING_MODEL, input=[text])
+            self.tokens_used += response.usage.prompt_tokens
+            self.cache[self.key(text)] = np.asarray(response.data[0].embedding, dtype=np.float32)
+            self.save()
+        return self.cache[self.key(text)].tolist()
 
     def save(self):
         INDEX_DIR.mkdir(parents=True, exist_ok=True)

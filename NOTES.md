@@ -83,3 +83,31 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - "Finesse 12.6(2)ES3": neither search handles versions well, which is why Phase 5 checks versions in code.
   - A Bluetooth attack on Mitel phones: both searches put CVE-2020-27639 first.
 - **Lesson:** each kind of search succeeds where the other fails, which is why Phase 5 combines them (hybrid search).
+
+## Phase 5: Make search smart (2026-10-17)
+
+- **What smart search does, in order:**
+  1. It opens any CVE named in the question directly, plus any CVE that record mentions (for example, a chained flaw).
+  2. It reads the question for products, vendors, a version, severity, and words about exploitation, ransomware, priorities or recency (`callguard.understand`).
+  3. It filters the search to those, and relaxes the filters step by step if nothing matches.
+  4. It ranks "what first?" questions by rule (exploited, then exploit forecast, then severity) and "newest" questions by date.
+  5. Otherwise it runs hybrid search, merging meaning and keyword results with RRF. When a question names a CVE, the search also uses that CVE's description ("more like this"), so look-alike flaws surface.
+  6. If a version is named, the version checker marks each CVE as affected, not affected or unknown, and ranks affected first.
+- **Version checker (`callguard.versions`):** compares versions in plain code. 24 automated tests (`uv run pytest`) cover the exam's version cases, plus traps found along the way:
+  - CISA once wrote a version as `9.8-SP1-\/9.8.1.5\/`, which at first made 9.8.2.0 look affected.
+  - NVD and CISA sometimes disagree (NVD says up to 9.8.1.201, CISA says before 9.8.2.12). The checker then answers "affected", the cautious choice, and states that the sources disagree.
+- **Retrieval scores on the exam** (18 questions with known CVEs, top 5; the full table is in `reports/retrieval_eval.md`):
+
+| Setup | Found all | Share of expected CVEs found | Time per question |
+|---|---|---|---|
+| Meaning only | 6/18 | 44% | 6 ms |
+| Keywords only | 10/18 | 68% | 10 ms |
+| Hybrid (RRF) | 11/18 | 74% | 20 ms |
+| Smart search | 16/18 | 96% | 31 ms |
+| Smart + MiniLM reranker | 16/18 | 96% | 1.0 s |
+| Smart + BGE reranker | 16/18 | 96% | 8.6 s |
+
+- **Decision: no reranker by default.** Both rerankers matched smart search without improving on it, and they added 1 to 8.6 seconds per question. Phase 9 re-tests this on full answers.
+- **The biggest gain came from understanding the question**, not from better ranking. Exact lookups, filters, priority rules and the version checker took search from 74% to 96%.
+- **Remaining misses:** S1 and S2 ask for every matching flaw (5 and 6 CVEs), which is more than fits in a top 5. Phase 6 may give list-type questions more room.
+- **Exam correction:** for S2, search found two correct answers the exam had missed: CVE-2023-25597 (download a shared file without logging in) and CVE-2022-36452 (upload malicious files without logging in). Both are now in the exam.

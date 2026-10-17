@@ -111,8 +111,8 @@ id = "S2"
 type = "meaning"
 question = "Is there a way to read or change files on a MiCollab server without logging in?"
 expect = "answer"
-cves = ["CVE-2024-41713", "CVE-2025-52913", "CVE-2021-27402", "CVE-2020-11798"]
-answer = '''Yes, through path traversal flaws: CVE-2024-41713 (9.1 Critical, in CISA KEV, ransomware use Known), CVE-2025-52913 (9.8 Critical, through 9.8.2.12), CVE-2021-27402 (SAS Admin portal, before 9.2 FP2) and CVE-2020-11798 (web conference component of MiCollab AWV). CVE-2024-55550 also reads files, but it needs an administrator login.'''
+cves = ["CVE-2024-41713", "CVE-2025-52913", "CVE-2021-27402", "CVE-2020-11798", "CVE-2023-25597", "CVE-2022-36452"]
+answer = '''Yes. Path traversal flaws let an attacker who isn't logged in read or change files: CVE-2024-41713 (9.1 Critical, in CISA KEV, ransomware use Known), CVE-2025-52913 (9.8 Critical, through 9.8.2.12), CVE-2021-27402 (SAS Admin portal, before 9.2 FP2) and CVE-2020-11798 (web conference component of MiCollab AWV). The web conferencing component also had CVE-2023-25597 (download a shared file without logging in, through 9.6.2.9) and CVE-2022-36452 (upload malicious files without logging in, 9.8 Critical, through 9.5.0.101). CVE-2024-55550 also reads files, but it needs an administrator login.'''
 tests = "Meaning plus a detail ('without logging in') that rules one CVE out"
 
 [[question]]
