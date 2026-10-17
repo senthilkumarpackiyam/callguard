@@ -112,7 +112,8 @@ def exploitation(kev_entry):
     return {"since": kev_entry["dateAdded"], "federal_due_date": kev_entry.get("dueDate"),
             "required_action": kev_entry.get("requiredAction"),
             "ransomware": kev_entry.get("knownRansomwareCampaignUse"),
-            "forensic_triage": kev_entry.get("forensicTriage"), "name": kev_entry.get("vulnerabilityName")}
+            "forensic_triage": kev_entry.get("forensicTriage"), "name": kev_entry.get("vulnerabilityName"),
+            "summary": kev_entry.get("shortDescription")}  # CISA's own words, e.g. which flaws get chained
 
 
 def useful_links(cve, limit=6):
@@ -179,6 +180,8 @@ def render_text(r):
         e = r["exploited"]
         lines.append(f"Exploitation: in CISA KEV since {e['since']}; ransomware use: {e['ransomware']}; "
                      f"required action: {e['required_action']}")
+        if e.get("summary"):
+            lines.append(f"CISA's summary: {e['summary']}")
     if r["epss"]:
         lines.append(f"Exploit forecast (EPSS, {r['epss']['date']}): {r['epss']['score']:.1%} chance of "
                      f"exploitation in the next 30 days")

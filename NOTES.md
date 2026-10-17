@@ -56,3 +56,17 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
 - **Severity:** CVSS 3.1 is preferred so that scores can be compared. 366 older CVEs only have CVSS v2, which has no "Critical" level.
 - **Watch list:** the riskiest recent flaw that isn't in KEV is CVE-2024-35286 (Mitel MiCollab, 9.8 Critical, EPSS 66%).
 - The full one-page report is in `reports/data_report.md`.
+
+## Phase 3: Write the exam first (2026-10-17)
+
+- **The exam:** `eval/questions.toml` holds 25 questions with reference answers. They were written before building the assistant, so the test isn't shaped by whatever the assistant happens to do well. The mix is 4 exact CVE number, 5 version-specific, 5 search by meaning, 4 multi-step, 2 freshness and 5 should-refuse. The user reviewed and approved all 25.
+- **Every answer comes from the data:** `scripts/check_questions.py` confirms that each expected CVE exists in `data/processed/cves.jsonl` and is named in its question or answer. Run it again whenever the data or the questions change.
+- **Questions designed to catch specific mistakes:**
+  - V2 tests the edge of a range ("up to and including").
+  - V3 tests saying "not affected" correctly while spotting a related flaw (CVE-2025-52913) whose versions appear only in its description.
+  - S2 includes a detail ("without logging in") that rules one CVE out.
+  - M2's correct answer is "none confirmed", because Unknown is not the same as no.
+  - M4 asks about a Low (2.7) CVE that ransomware gangs use and chain with a critical one: severity is not the same as risk.
+  - F1 and F2 depend on the day they're asked, so grading works out their answers from the data at grading time.
+  - R1–R5 cover five kinds of "no": an unknown product, a cloud product, an out-of-scope product, private data, and no matching records.
+- **Data fixes made along the way:** CISA's short summary is now kept in each exploited record, because that's where the chaining of CVE-2024-41713 and CVE-2024-55550 is recorded. `scripts/collect.py --offline` re-cleans the saved downloads in about a second.

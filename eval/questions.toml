@@ -1,0 +1,255 @@
+# CallGuard's exam: 25 test questions with their correct answers, written before building the assistant.
+# Phase 3 (2026-10-17). Every answer comes from data/processed/cves.jsonl (data as of 2026-10-17).
+#
+# type     exact-id | version | meaning | multi-step | freshness | refuse
+# expect   "answer" = a good answer finds and uses the listed CVEs
+#          "refuse" = the right move is to decline, for the stated reason
+# cves     the CVE records a good answer must find and use
+# answer   the key facts of a correct answer; grading compares CallGuard's answers against these
+# tests    which part of CallGuard the question exercises
+# dynamic  freshness only: the right answer depends on the day you ask, so grading works it out
+#          from the data at grading time, using this rule
+
+# ---------- Exact CVE number: can it look a CVE up directly? ----------
+
+[[question]]
+id = "E1"
+type = "exact-id"
+question = "What is CVE-2024-41713, and are attackers using it?"
+expect = "answer"
+cves = ["CVE-2024-41713"]
+answer = '''A path traversal flaw in the NuPoint Unified Messaging component of Mitel MiCollab, up to and including 9.8.1.201 (9.8 SP1 FP2). An attacker who isn't logged in can view, corrupt or delete users' data and system configuration. CVSS 9.1 Critical. Yes, attackers use it: it has been in CISA KEV since 2025-01-07, ransomware use is Known, and it can be chained with CVE-2024-55550. The fix is in Mitel advisory MISA-2024-0029.'''
+tests = "Direct lookup by CVE number, and reporting exploitation"
+
+[[question]]
+id = "E2"
+type = "exact-id"
+question = "Tell me about CVE-2026-20362. How serious is it?"
+expect = "answer"
+cves = ["CVE-2026-20362"]
+answer = '''A server-side request forgery (SSRF) flaw in the web management interface of Cisco Finesse. An unauthenticated remote attacker can send crafted HTTP requests and obtain limited sensitive information. CVSS 7.2 High. It is not in CISA KEV, and its exploit forecast (EPSS) is about 0.5%. Cisco lists 28 affected Finesse builds, from 12.6(1) to 15.0(1)SU2. Advisory: cisco-sa-finesse-ssrf-mmSuyugS.'''
+tests = "Direct lookup of a brand-new CVE that NVD hasn't analyzed yet"
+
+[[question]]
+id = "E3"
+type = "exact-id"
+question = "What does CVE-2025-64328 affect, and is it being exploited?"
+expect = "answer"
+cves = ["CVE-2025-64328"]
+answer = '''FreePBX Endpoint Manager: a command injection in the filestore module of the administrative interface, after login, in versions 17.0.2.36 and later before 17.0.3. CVSS 7.2 High. Yes, it is being exploited: it has been in CISA KEV since 2026-02-03 (ransomware use Unknown), and its exploit forecast is about 85%.'''
+tests = "Direct lookup, with version range and exploitation status"
+
+[[question]]
+id = "E4"
+type = "exact-id"
+question = "Explain CVE-2022-29499."
+expect = "answer"
+cves = ["CVE-2022-29499"]
+answer = '''A remote code execution flaw in the Service Appliance component (SA 100, SA 400 and Virtual SA) of Mitel MiVoice Connect through 19.2 SP3, caused by incorrect data validation. CVSS 9.8 Critical. It has been in CISA KEV since 2022-06-27, and ransomware use is Known.'''
+tests = "Direct lookup of an older, ransomware-linked CVE"
+
+# ---------- Version-specific: does it reason correctly about version ranges? ----------
+
+[[question]]
+id = "V1"
+type = "version"
+question = "We run Cisco Finesse 12.6(2)ES3. Does CVE-2026-20362 affect us?"
+expect = "answer"
+cves = ["CVE-2026-20362"]
+answer = '''Yes. 12.6(2)ES3 is one of the 28 Finesse builds Cisco lists as affected. Apply the fix in Cisco's advisory cisco-sa-finesse-ssrf-mmSuyugS.'''
+tests = "Matching a Cisco build name against the vendor's list of exact builds"
+
+[[question]]
+id = "V2"
+type = "version"
+question = "Is MiCollab 9.8.1.201 affected by CVE-2024-41713?"
+expect = "answer"
+cves = ["CVE-2024-41713"]
+answer = '''Yes. CVE-2024-41713 affects MiCollab up to and including 9.8.1.201 (9.8 SP1 FP2), so that exact version is affected.'''
+tests = "The edge of a range: 'up to and including' means the last version is affected"
+
+[[question]]
+id = "V3"
+type = "version"
+question = "We upgraded MiCollab to 9.8.2.0. Are we still affected by CVE-2024-41713?"
+expect = "answer"
+cves = ["CVE-2024-41713", "CVE-2025-52913"]
+answer = '''Not by CVE-2024-41713, which affects versions up to and including 9.8.1.201. But CVE-2025-52913, a similar critical (9.8) path traversal in the same NuPoint component, affects MiCollab through 9.8 SP2 (9.8.2.12), so 9.8.2.0 is still exposed to that one.'''
+tests = "Saying 'not affected' correctly, and spotting a related flaw whose versions appear only in its description"
+
+[[question]]
+id = "V4"
+type = "version"
+question = "We run Asterisk 18.9.0. Are we exposed to any critical vulnerabilities?"
+expect = "answer"
+cves = ["CVE-2022-26499", "CVE-2022-26651"]
+answer = '''Yes, two: CVE-2022-26499 (9.1 Critical, server-side request forgery when STIR/SHAKEN is used) and CVE-2022-26651 (9.8 Critical, inadequate escaping in the func_odbc module that can allow SQL injection). Both affect Asterisk 18.x before 18.11.2, so upgrading to 18.11.2 or later fixes both.'''
+tests = "Finding every CVE whose range covers a version, filtered by severity"
+
+[[question]]
+id = "V5"
+type = "version"
+question = "Our CUCM is on 14SU2. Which known-exploited vulnerabilities affect it?"
+expect = "answer"
+cves = ["CVE-2026-20045", "CVE-2026-20230"]
+answer = '''Two CISA KEV entries: CVE-2026-20045 (9.8 Critical code injection, affecting 12.5 up to before 14SU5) and CVE-2026-20230 (8.6 High server-side request forgery, affecting 14.0 up to before 14SU6; Cisco lists 14SU2 by name). Ransomware use is Unknown for both.'''
+tests = "Cisco's service-update version names, combined with the exploited filter"
+
+# ---------- Search by meaning: does it understand plain-language descriptions? ----------
+
+[[question]]
+id = "S1"
+type = "meaning"
+question = "Can an attacker trick Cisco Finesse into sending requests to internal systems?"
+expect = "answer"
+cves = ["CVE-2026-20362", "CVE-2024-20404", "CVE-2019-12632", "CVE-2018-0398", "CVE-2016-1373"]
+answer = '''Yes. That is server-side request forgery (SSRF), and Finesse has had several: CVE-2026-20362 (2026, 7.2 High), CVE-2024-20404 (2024, 5.3 Medium), CVE-2019-12632 (2019, 7.5 High), CVE-2018-0398 (2018, 9.8 Critical) and CVE-2016-1373 (2016, 8.6 High). None is in CISA KEV.'''
+tests = "Plain words ('trick it into sending requests') matched to the technical term (SSRF)"
+
+[[question]]
+id = "S2"
+type = "meaning"
+question = "Is there a way to read or change files on a MiCollab server without logging in?"
+expect = "answer"
+cves = ["CVE-2024-41713", "CVE-2025-52913", "CVE-2021-27402", "CVE-2020-11798"]
+answer = '''Yes, through path traversal flaws: CVE-2024-41713 (9.1 Critical, in CISA KEV, ransomware use Known), CVE-2025-52913 (9.8 Critical, through 9.8.2.12), CVE-2021-27402 (SAS Admin portal, before 9.2 FP2) and CVE-2020-11798 (web conference component of MiCollab AWV). CVE-2024-55550 also reads files, but it needs an administrator login.'''
+tests = "Meaning plus a detail ('without logging in') that rules one CVE out"
+
+[[question]]
+id = "S3"
+type = "meaning"
+question = "Which workforce-management or workload-distribution tools have SQL injection flaws?"
+expect = "answer"
+cves = ["CVE-2021-40860", "CVE-2021-40861"]
+answer = '''Genesys intelligent Workload Distribution (iWD): CVE-2021-40860 (before 9.0.013.11) and CVE-2021-40861 (9.0.017.07), both 7.2 High, in the custom filter query component. The data has no SQL injection flaws in Verint or Avaya workforce tools.'''
+tests = "A category of product plus a type of flaw, across vendors"
+
+[[question]]
+id = "S4"
+type = "meaning"
+question = "Could someone near a Mitel desk phone attack it over Bluetooth?"
+expect = "answer"
+cves = ["CVE-2020-27639"]
+answer = '''Yes: CVE-2020-27639 (8.1 High). On Mitel 6873i, 6930 and 6940 SIP phones with firmware before 5.1.0.SP6, an attacker within Bluetooth range can pair a rogue device when the handset loses its connection, and then eavesdrop on conversations.'''
+tests = "An everyday description ('someone nearby, over Bluetooth') matched to one specific CVE"
+
+[[question]]
+id = "S5"
+type = "meaning"
+question = "Can a FreePBX user who only has User Control Panel access run commands on the server?"
+expect = "answer"
+cves = ["CVE-2026-54674"]
+answer = '''Yes: CVE-2026-54674 (8.8 High). In FreePBX versions before 16.0.39 and 17.0.7, users who log in to the User Control Panel (UCP) can run arbitrary commands on the PBX as the web server user. That matters because UCP accounts are usually given to less-trusted users than admin accounts.'''
+tests = "A role-based detail (UCP user, not admin) among many FreePBX command-injection flaws"
+
+# ---------- Multi-step: does it combine filters, exploitation data and priorities? ----------
+
+[[question]]
+id = "M1"
+type = "multi-step"
+question = "Which Mitel vulnerabilities have been used in ransomware attacks?"
+expect = "answer"
+cves = ["CVE-2024-41713", "CVE-2024-55550", "CVE-2022-29499", "CVE-2022-40765"]
+answer = '''Four, all in CISA KEV with ransomware use Known: CVE-2024-41713 and CVE-2024-55550 in MiCollab (often chained together), and CVE-2022-29499 and CVE-2022-40765 in MiVoice Connect.'''
+tests = "Vendor filter plus the ransomware flag that only KEV has"
+
+[[question]]
+id = "M2"
+type = "multi-step"
+question = "Are any exploited Cisco UC vulnerabilities linked to ransomware?"
+expect = "answer"
+cves = ["CVE-2026-20045", "CVE-2026-20230"]
+answer = '''None is confirmed. Two Cisco UC flaws are in CISA KEV: CVE-2026-20045 (Unified CM, IM & Presence, Unity Connection) and CVE-2026-20230 (Unified CM). CISA lists ransomware use as Unknown for both, and Unknown means not confirmed, not "no".'''
+tests = "Answering 'none confirmed' correctly without overstating it"
+
+[[question]]
+id = "M3"
+type = "multi-step"
+question = "We run FreePBX. Which vulnerabilities should we patch first?"
+expect = "answer"
+cves = ["CVE-2025-57819", "CVE-2025-64328", "CVE-2019-19006"]
+answer = '''Start with the three that attackers are known to be using (CISA KEV), highest exploit forecast first: CVE-2025-57819 (9.8 Critical, unauthenticated admin access leading to code execution, EPSS about 86%), CVE-2025-64328 (7.2 High, about 85%) and CVE-2019-19006 (9.8 Critical access-control flaw, about 56%). After those, the highest forecasts not in KEV, such as CVE-2025-61678 and CVE-2025-61675 in Endpoint Manager.'''
+tests = "The priority rule: exploited first, then exploit forecast, then severity"
+
+[[question]]
+id = "M4"
+type = "multi-step"
+question = "CVE-2024-55550 is only rated Low. Can we leave it until last?"
+expect = "answer"
+cves = ["CVE-2024-55550", "CVE-2024-41713"]
+answer = '''No. Despite its 2.7 Low score, it is in CISA KEV and ransomware gangs have used it. Attackers chain it with CVE-2024-41713, which gives them the unauthenticated access the low score assumes they don't have. Patch both MiCollab flaws together.'''
+tests = "Severity is not risk: using KEV data and CISA's chaining note"
+
+# ---------- Freshness: is the data current, and does the answer say how current? ----------
+
+[[question]]
+id = "F1"
+type = "freshness"
+question = "What new vulnerabilities were published for our products in the past 7 days?"
+expect = "answer"
+dynamic = "in-scope CVEs published in the 7 days before the data's 'as of' date"
+cves = []
+answer = '''Depends on the day. As of 2026-10-17 there were none: the newest, CVE-2026-20362 (Cisco Finesse), was published on 2026-10-07. A good answer always states the "data as of" date.'''
+tests = "Up-to-date data, and honesty about how up to date it is"
+
+[[question]]
+id = "F2"
+type = "freshness"
+question = "What's the most recent Cisco contact-center vulnerability, and when was it published?"
+expect = "answer"
+dynamic = "the newest CVE for UCCX, UCCE/PCCE, Finesse, CVP or CUIC"
+cves = []
+answer = '''Depends on the day. As of 2026-10-17 it was CVE-2026-20362 in Cisco Finesse, published on 2026-10-07 (7.2 High, server-side request forgery).'''
+tests = "Sorting by date within a product group, on fresh data"
+
+# ---------- Should refuse: does it decline instead of guessing? ----------
+
+[[question]]
+id = "R1"
+type = "refuse"
+question = "Are there any vulnerabilities in Avaya CloudQueue Pro 4.2?"
+expect = "refuse"
+reason = "unknown product"
+cves = []
+answer = '''CallGuard doesn't recognize this product (it doesn't exist), so it has nothing to check. It should say so plainly, list the products it covers, and not guess.'''
+tests = "Refusing a made-up product instead of inventing an answer"
+
+[[question]]
+id = "R2"
+type = "refuse"
+question = "Is Amazon Connect affected by any critical vulnerabilities?"
+expect = "refuse"
+reason = "cloud"
+cves = []
+answer = '''There are no CVE records for Amazon Connect. It's a cloud service that AWS patches itself, and cloud services rarely get CVEs, so this does not mean it's free of flaws. Check AWS's security bulletins.'''
+tests = "The cloud message: no records must not sound like 'safe'"
+
+[[question]]
+id = "R3"
+type = "refuse"
+question = "What vulnerabilities affect Cisco Emergency Responder?"
+expect = "refuse"
+reason = "out of scope"
+cves = []
+answer = '''Cisco Emergency Responder is deliberately not covered by CallGuard, so it should say that rather than answer from partial data.'''
+tests = "Respecting the product scope chosen in Phase 1"
+
+[[question]]
+id = "R4"
+type = "refuse"
+question = "Have we patched CVE-2024-41713 on our MiCollab servers?"
+expect = "refuse"
+reason = "internal data"
+cves = []
+answer = '''CallGuard can't see your systems, so it can't know your patch status. It can tell you which versions are affected (up to and including 9.8.1.201) so you can check yours.'''
+tests = "Declining questions about private data it doesn't have, while still being helpful"
+
+[[question]]
+id = "R5"
+type = "refuse"
+question = "Are there known vulnerabilities in Avaya Aura Communication Manager 10.2?"
+expect = "refuse"
+reason = "no records"
+cves = []
+answer = '''No CVE in the data covers version 10.2 as of the data date. The most recent Communication Manager CVE, CVE-2022-2249, lists 8.x before 8.1.3.4 and 10.1.0.0. This does not confirm that 10.2 is safe; check Avaya's security advisories.'''
+tests = "The core safety rule: 'no matching CVE' must never sound like 'you're safe'"
