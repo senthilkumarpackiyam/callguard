@@ -14,7 +14,7 @@ A learning roadmap for building CallGuard one phase at a time. Each phase ends w
 - [x] Phase 7: Build the call flow with LangGraph
 - [x] Phase 8: Keep it fresh
 - [x] Phase 9: Grade it like a QA team
-- [ ] Phase 10: Give it a face
+- [x] Phase 10: Give it a face
 - [ ] Phase 11: Ship it
 
 ## The big idea
@@ -187,11 +187,12 @@ See NOTES.md for the measurements behind these.
 
 ### Phase 10: Give it a face (~2–4 h)
 
-- **Goal:** a chat app you can demo in a browser.
+- **Goal:** a branded website you can demo in a browser.
 - **New ideas:**
   - *Front end and back end:* the agent desktop and the CRM server behind it.
-  - *Streamlit:* a tool that builds a web page using only Python.
-- **You'll do:** build a chat page with a sidebar for your stack and filters, a "data as of" badge, and clickable CVE links.
+  - *FastAPI:* a small Python web server that sends the page and answers its requests.
+  - *Streaming:* the answer appears word by word, like a live chat, instead of all at once.
+- **You'll do:** build a website with a logo and hero image, a "data as of" badge, a clickable list of the latest vulnerabilities, a chat with clickable CVE links, downloads (CSV, Excel, PDF) and email drafts.
 - **Done when:** you can demo every question type in the browser.
 
 ### Phase 11: Ship it (~4–6 h)

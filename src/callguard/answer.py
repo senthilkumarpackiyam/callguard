@@ -130,8 +130,9 @@ class Answerer:
                 "vendor's security advisories."), "refusal", "no records")
         return None
 
-    def generate(self, question, u, hits, extra_notes=()):
-        """Have the model write the answer from the records, with the facts code has worked out."""
+    def generate(self, question, u, hits, extra_notes=(), on_token=None):
+        """Have the model write the answer from the records, with the facts code has worked out.
+        on_token, if given, receives the answer piece by piece as it's written (for the website)."""
         notes = [f"Products named: {', '.join(f'{p.name} ({p.scope})' for p in u.products)}" if u.products else "",
                  f"Version asked about: {u.version}" if u.version else "",
                  "The question is about the user's own systems, which CallGuard can't see." if u.internal else "",
@@ -151,12 +152,19 @@ class Answerer:
                   "What code has worked out:\n" + ("\n".join(f"- {n}" for n in notes if n) or "- nothing extra")
                   + f"\n\nCVE records found:\n{records}")
 
-        response = self.llm.chat.completions.create(
-            model=self.model, temperature=0.1, max_tokens=MAX_TOKENS,
-            messages=[{"role": "system", "content": self.system}, {"role": "user", "content": prompt}])
-        text = (response.choices[0].message.content or "").strip()
-        if response.choices[0].finish_reason == "length":  # never show a cut-off answer without saying so
-            text += "\n\n(This answer was cut short. Ask about fewer CVEs at a time for the full details.)"
+        messages = [{"role": "system", "content": self.system}, {"role": "user", "content": prompt}]
+        if on_token:
+            text, finish_reason, tokens = self.stream(messages, on_token)
+        else:
+            response = self.llm.chat.completions.create(model=self.model, temperature=0.1, max_tokens=MAX_TOKENS,
+                                                        messages=messages)
+            text, finish_reason = (response.choices[0].message.content or "").strip(), response.choices[0].finish_reason
+            tokens = response.usage.total_tokens
+        if finish_reason == "length":  # never show a cut-off answer without saying so
+            cut = "\n\n(This answer was cut short. Ask about fewer CVEs at a time for the full details.)"
+            text += cut
+            if on_token:
+                on_token(cut)
         retrieved_ids = [h.record["id"] for h in hits]
         # A CVE is supported if it was retrieved or is named inside a record (e.g. CISA's "chained with" note)
         mentioned = {c.upper() for block in blocks for c in CVE_ID.findall(block)}
@@ -164,4 +172,24 @@ class Answerer:
         return Answer(question, text, "answer", retrieved=retrieved_ids,
                       cited=[c for c in cited if c in retrieved_ids],
                       unsupported=[c for c in cited if c not in retrieved_ids and c not in mentioned],
-                      model=self.model, tokens=response.usage.total_tokens, contexts=blocks)
+                      model=self.model, tokens=tokens, contexts=blocks)
+
+    def stream(self, messages, on_token):
+        """Ask the model with streaming on, passing each new piece of the answer to on_token as it arrives.
+        A reasoning model thinks first, silently; only the written answer is passed on."""
+        parts, finish_reason, tokens = [], None, 0
+        for chunk in self.llm.chat.completions.create(model=self.model, temperature=0.1, max_tokens=MAX_TOKENS,
+                                                      messages=messages, stream=True,
+                                                      stream_options={"include_usage": True}):
+            if chunk.usage:
+                tokens = chunk.usage.total_tokens
+            if not chunk.choices:
+                continue
+            piece = chunk.choices[0].delta.content
+            if piece:
+                if not parts:
+                    piece = piece.lstrip()
+                parts.append(piece)
+                on_token(piece)
+            finish_reason = chunk.choices[0].finish_reason or finish_reason
+        return "".join(parts).strip(), finish_reason, tokens

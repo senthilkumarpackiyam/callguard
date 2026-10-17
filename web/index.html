@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CallGuard · Contact-center vulnerability intelligence</title>
+<meta name="description" content="CallGuard answers vulnerability questions about contact-center and UC products from live NVD, CISA KEV and EPSS data, with every claim cited.">
+<meta name="theme-color" content="#0E2B4D">
+<link rel="icon" href="/static/brand/logo-mark.svg" type="image/svg+xml">
+<link rel="icon" href="/static/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top" aria-label="CallGuard home">
+      <img src="/static/brand/logo-mark.svg" alt="" width="36" height="36">
+      <span class="brand-text">
+        <span class="brand-name"><span>Call</span><span>Guard</span></span>
+        <span class="brand-tag">Vulnerability intelligence</span>
+      </span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#latest">Latest</a><a href="#ask">Ask</a><a href="#about">About</a>
+    </nav>
+    <div class="freshness" id="freshness">
+      <span class="dot" id="freshness-dot"></span><span id="freshness-text">Loading data…</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">Contact-center vulnerability intelligence</p>
+      <h1>Know your contact-center exposure <span>before attackers do.</span></h1>
+      <p class="lead">CallGuard tracks known security flaws in Cisco, Avaya, Mitel, Asterisk, FreePBX, Genesys and
+        Verint systems, and answers your questions from live NVD, CISA and EPSS data, with every claim cited.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#ask">Ask a question</a>
+        <a class="btn ghost" href="#latest">See the latest flaws</a>
+      </div>
+      <dl class="stats">
+        <div><dt id="stat-records">–</dt><dd>CVEs tracked</dd></div>
+        <div><dt id="stat-exploited">–</dt><dd>known exploited</dd></div>
+        <div><dt id="stat-products">–</dt><dd>products covered</dd></div>
+        <div><dt>2 h</dt><dd>sync interval</dd></div>
+      </dl>
+    </div>
+    <div class="hero-art"><img src="/static/brand/hero.svg" alt="CallGuard watching over contact-center systems"></div>
+  </div>
+</section>
+
+<main class="workspace">
+  <section class="panel latest" id="latest" aria-labelledby="latest-title">
+    <div class="panel-head">
+      <h2 id="latest-title">Latest vulnerabilities</h2>
+      <p class="sub" id="latest-count">Newest first</p>
+    </div>
+    <form class="filters" id="filters" autocomplete="off">
+      <select id="f-vendor" aria-label="Vendor"><option value="">All vendors</option></select>
+      <select id="f-product" aria-label="Product"><option value="">All products</option></select>
+      <select id="f-severity" aria-label="Severity">
+        <option value="">Any severity</option><option value="CRITICAL">Critical</option>
+        <option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option>
+      </select>
+      <label class="check"><input type="checkbox" id="f-exploited"> Exploited only</label>
+      <input type="search" id="f-q" placeholder="Search a CVE, product or word…" aria-label="Search the list">
+    </form>
+    <ul class="cve-list" id="cve-list" aria-live="polite"></ul>
+    <button class="btn ghost wide" id="more" type="button" hidden>Show more</button>
+    <div class="panel-foot">
+      <span class="foot-label">Export this list</span>
+      <a class="btn small ghost" id="export-csv" href="#" download>CSV</a>
+      <a class="btn small ghost" id="export-xlsx" href="#" download>Excel</a>
+      <a class="btn small ghost" id="export-pdf" href="#" download>PDF</a>
+      <button class="btn small ghost" id="email-list" type="button">✉ Email</button>
+    </div>
+  </section>
+
+  <section class="panel chat" id="ask" aria-labelledby="ask-title">
+    <div class="panel-head">
+      <h2 id="ask-title">Ask CallGuard</h2>
+      <p class="sub">Answers come only from the records, with sources. "No CVE found" never means "safe".</p>
+    </div>
+    <div class="messages" id="messages" aria-live="polite">
+      <div class="msg bot">
+        <img class="avatar" src="/static/brand/logo-mark.svg" alt="">
+        <div class="bubble">
+          <p>Hello! Ask me about known vulnerabilities in your contact-center stack. Try one of these:</p>
+          <div class="chips">
+            <button class="chip" type="button">Is there an actively exploited vulnerability in Mitel MiCollab?</button>
+            <button class="chip" type="button">Our CUCM is on 14SU2. Which known-exploited vulnerabilities affect it?</button>
+            <button class="chip" type="button">We run FreePBX. Which vulnerabilities should we patch first?</button>
+            <button class="chip" type="button">What new vulnerabilities were published in the past 7 days?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <form class="composer" id="composer">
+      <textarea id="question" rows="2" maxlength="500" placeholder="Ask about a product, a version or a CVE…"
+                aria-label="Your question"></textarea>
+      <button class="btn primary" id="send" type="submit">Ask</button>
+    </form>
+  </section>
+</main>
+
+<section class="about" id="about">
+  <div class="about-inner">
+    <h2>How CallGuard works</h2>
+    <ol class="steps">
+      <li><b>Collects</b><span>CVEs for your products from NVD every 2 hours, with CISA's list of exploited flaws and
+        FIRST's exploit forecasts.</span></li>
+      <li><b>Finds</b><span>the right records by meaning and by exact words, and checks your version against them in
+        code.</span></li>
+      <li><b>Answers</b><span>only from those records, citing every claim and showing how fresh the data is.</span></li>
+      <li><b>Says no, safely</b><span>for unknown products, cloud services and questions about your own systems: an
+        honest answer, never a guess.</span></li>
+    </ol>
+    <h3>Products covered</h3>
+    <ul class="product-tags" id="product-tags"></ul>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="brand small">
+      <img src="/static/brand/logo-mark.svg" alt="" width="24" height="24">
+      <span class="brand-name"><span>Call</span><span>Guard</span></span>
+    </div>
+    <p>Data from <a href="https://nvd.nist.gov" target="_blank" rel="noopener noreferrer">NVD</a>,
+      <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener noreferrer">CISA KEV</a>
+      and <a href="https://www.first.org/epss/" target="_blank" rel="noopener noreferrer">FIRST EPSS</a>.
+      This product uses the NVD API but is not endorsed or certified by the NVD.</p>
+    <p class="muted">No CVE found does not mean a product or version is safe: always confirm with the vendor's security
+      advisories. Built for the GEN ACADEMY RAG course.</p>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+  <button class="icon-btn close" id="drawer-close" type="button" aria-label="Close details">×</button>
+  <div id="drawer-body"></div>
+</aside>
+
+<div class="modal" id="email-modal" role="dialog" aria-modal="true" aria-labelledby="email-title" hidden>
+  <div class="modal-card">
+    <h3 id="email-title">Email through your email app</h3>
+    <p class="sub">CallGuard writes the draft and your email app sends it, so nothing is sent until you press Send there.</p>
+    <label for="email-to">To <span class="hint">(separate addresses with commas)</span></label>
+    <textarea id="email-to" rows="2" placeholder="name@company.com, colleague@company.com"></textarea>
+    <p class="error" id="email-error" hidden></p>
+    <label for="email-subject">Subject</label>
+    <input id="email-subject" type="text">
+    <label for="email-body">Message</label>
+    <textarea id="email-body" rows="9"></textarea>
+    <div class="modal-actions">
+      <button class="btn ghost" id="email-cancel" type="button">Cancel</button>
+      <button class="btn primary" id="email-open" type="button">Open in email app</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/vendor/marked.min.js"></script>
+<script src="/static/vendor/purify.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

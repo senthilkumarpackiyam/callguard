@@ -19,6 +19,7 @@ import time
 from typing import TypedDict
 
 from dotenv import load_dotenv
+from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langsmith.wrappers import wrap_openai
 from openai import OpenAI
@@ -52,6 +53,7 @@ injection, path traversal, authentication bypass); otherwise an empty string"}""
 
 class State(TypedDict, total=False):
     question: str
+    stream: bool        # send the answer piece by piece as it's written (the website)
     started: float
     understanding: Understanding
     route: str          # lookup, priority, newest, search, cloud, or out of scope
@@ -129,7 +131,12 @@ class CallFlow:
         notes = [] if c["fits"] else [
             f"A check found that these records may not be the right ones ({c['why']}). Say what is missing, "
             "and don't stretch them to fit the question."]
-        return {"answer": self.answerer.generate(state["question"], state["understanding"], state["hits"], notes)}
+        on_token = None
+        if state.get("stream"):
+            writer = get_stream_writer()
+            on_token = lambda piece: writer({"token": piece})  # noqa: E731
+        return {"answer": self.answerer.generate(state["question"], state["understanding"], state["hits"], notes,
+                                                 on_token=on_token)}
 
     def refuse(self, state):
         return {"answer": self.answerer.code_refusal(state["question"], state["understanding"],

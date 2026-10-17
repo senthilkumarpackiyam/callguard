@@ -1,5 +1,6 @@
 """CallGuard's product list: load config/products.toml and match CVE records to products."""
 
+import html
 import re
 import tomllib
 from dataclasses import dataclass
@@ -68,8 +69,14 @@ def product_names(cve):
     return cpe_names, vendor_entries
 
 
+WEB_CODE = re.compile(r"&(?:#\d+|#x[0-9a-f]+|[a-z]+\d*);", re.IGNORECASE)  # complete codes only, e.g. "&amp;"
+
+
 def english_description(cve):
-    return next((d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"), "")
+    # Some NVD texts carry web codes such as "&amp;" (for "&"); turn them back into the characters they stand for.
+    # Only complete codes are decoded, so a web address like "?a=1&para=2" is left alone.
+    text = next((d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"), "")
+    return WEB_CODE.sub(lambda code: html.unescape(code.group()), text).replace("\xa0", " ")
 
 
 def match_products(cve, products):

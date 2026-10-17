@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" role="img"
+     aria-label="CallGuard watches over contact-center systems: phones, agent desktops and servers">
+  <defs>
+    <radialGradient id="h-glow" cx="0.58" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#5FE0CF" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#5FE0CF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="h-shield" x1="14" y1="4" x2="52" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16406E"/>
+      <stop offset="0.55" stop-color="#0E2B4D"/>
+      <stop offset="1" stop-color="#0B8C80"/>
+    </linearGradient>
+    <linearGradient id="h-rim" x1="32" y1="6" x2="32" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5FE0CF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#5FE0CF" stop-opacity="0.15"/>
+    </linearGradient>
+    <filter id="h-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0E2B4D" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <circle cx="325" cy="200" r="200" fill="url(#h-glow)"/>
+  <!-- scanning rings -->
+  <g fill="none" stroke="#0B8C80" stroke-opacity="0.18">
+    <circle cx="325" cy="196" r="104"/>
+    <circle cx="325" cy="196" r="148" stroke-dasharray="3 7"/>
+  </g>
+
+  <!-- network links to the systems around the shield -->
+  <g stroke="#9FB3C8" stroke-width="1.4" stroke-dasharray="4 5" fill="none">
+    <path d="M325 196 L170 92"/><path d="M325 196 L486 86"/><path d="M325 196 L156 300"/>
+    <path d="M325 196 L494 306"/><path d="M325 196 L325 352"/>
+  </g>
+
+  <!-- systems: desk phone, agent desktop, server rack, cloud, headset -->
+  <g filter="url(#h-soft)">
+    <g transform="translate(140 64)">
+      <rect width="60" height="56" rx="12" fill="#FFFFFF"/>
+      <rect x="14" y="13" width="32" height="22" rx="3" fill="none" stroke="#16406E" stroke-width="2.6"/>
+      <path d="M22 43h16" stroke="#16406E" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(456 58)">
+      <rect width="60" height="56" rx="12" fill="#FFFFFF"/>
+      <rect x="15" y="12" width="30" height="32" rx="3" fill="none" stroke="#16406E" stroke-width="2.6"/>
+      <path d="M21 20h18M21 28h18M21 36h12" stroke="#16406E" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(126 272)">
+      <rect width="60" height="56" rx="12" fill="#FFFFFF"/>
+      <path d="M17 31c0-7 6-12 13-12s13 5 13 12" fill="none" stroke="#16406E" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="14" y="29" width="7" height="11" rx="3" fill="#16406E"/>
+      <rect x="39" y="29" width="7" height="11" rx="3" fill="#16406E"/>
+    </g>
+    <g transform="translate(464 278)">
+      <rect width="60" height="56" rx="12" fill="#FFFFFF"/>
+      <path d="M20 36h22a8 8 0 0 0 0-16 11 11 0 0 0-21-2 8 8 0 0 0-1 18Z" fill="none" stroke="#16406E"
+            stroke-width="2.6" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(295 324)">
+      <rect width="60" height="56" rx="12" fill="#FFFFFF"/>
+      <path d="M18 18h24v8H18zM18 30h24v8H18z" fill="none" stroke="#16406E" stroke-width="2.4"/>
+      <circle cx="23" cy="22" r="1.6" fill="#0B8C80"/><circle cx="23" cy="34" r="1.6" fill="#0B8C80"/>
+    </g>
+  </g>
+
+  <!-- status badges on two systems: one exploited flaw, one all clear -->
+  <g transform="translate(190 56)">
+    <circle r="11" fill="#FFF4E5" stroke="#C2410C" stroke-width="1.6"/>
+    <path d="M0-5v6" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round"/><circle cy="5" r="1.4" fill="#C2410C"/>
+  </g>
+  <g transform="translate(508 54)">
+    <circle r="11" fill="#E6FAF6" stroke="#0B8C80" stroke-width="1.6"/>
+    <path d="M-4.5 0.5l3 3 6-6" fill="none" stroke="#0B8C80" stroke-width="2.4" stroke-linecap="round"
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- the CallGuard shield at the centre -->
+  <g transform="translate(261 120) scale(2)" filter="url(#h-soft)">
+    <path d="M32 3.5C39.6 7.4 46.8 9 55 9.6V30.5C55 45.6 45.6 55.2 32 60.5C18.4 55.2 9 45.6 9 30.5V9.6C17.2 9 24.4 7.4 32 3.5Z"
+          fill="url(#h-shield)"/>
+    <path d="M32 6.8C39 10.2 45.6 11.7 52.6 12.3V30.5C52.6 44 44.3 52.6 32 57.7C19.7 52.6 11.4 44 11.4 30.5V12.3C18.4 11.7 25 10.2 32 6.8Z"
+          fill="none" stroke="url(#h-rim)" stroke-width="1.1"/>
+    <path d="M21.2 34.5V31.6C21.2 25.6 26 20.8 32 20.8C38 20.8 42.8 25.6 42.8 31.6V34.5"
+          fill="none" stroke="#FFFFFF" stroke-width="3.3" stroke-linecap="round"/>
+    <rect x="17.6" y="31" width="7" height="11.2" rx="3.2" fill="#FFFFFF"/>
+    <rect x="39.4" y="31" width="7" height="11.2" rx="3.2" fill="#FFFFFF"/>
+    <path d="M43 42.2C43 46.6 39.9 49.3 35.3 49.3" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="29.6" y="47.3" width="6.2" height="4" rx="2" fill="#5FE0CF"/>
+  </g>
+
+  <!-- floating result cards -->
+  <g filter="url(#h-soft)" font-family="Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+    <g transform="translate(6 168)">
+      <rect width="176" height="58" rx="12" fill="#FFFFFF"/>
+      <rect x="12" y="12" width="6" height="34" rx="3" fill="#C2410C"/>
+      <text x="28" y="27" font-size="12" font-weight="700" fill="#0E2B4D">CVE-2024-41713</text>
+      <text x="28" y="44" font-size="10.5" fill="#5B6B7F">MiCollab · Exploited · 9.1</text>
+    </g>
+    <g transform="translate(380 160)">
+      <rect width="176" height="58" rx="12" fill="#FFFFFF"/>
+      <rect x="12" y="12" width="6" height="34" rx="3" fill="#0B8C80"/>
+      <text x="28" y="27" font-size="12" font-weight="700" fill="#0E2B4D">MiCollab 9.8.2.0</text>
+      <text x="28" y="44" font-size="10.5" fill="#5B6B7F">Not affected by 41713</text>
+    </g>
+  </g>
+</svg>

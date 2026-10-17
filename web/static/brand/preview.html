@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CallGuard brand preview</title>
+<link rel="icon" href="logo-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-900: #0E2B4D; --navy-800: #16406E; --teal-600: #0B8C80; --teal-300: #5FE0CF;
+    --bg: #F4F7FA; --surface: #FFFFFF; --border: #E2E8F0; --text: #1B2A3A; --muted: #5B6B7F;
+    --critical: #B42318; --critical-bg: #FEE4E2; --high: #C2410C; --high-bg: #FFEDD5;
+    --medium: #A16207; --medium-bg: #FEF3C7; --low: #475467; --low-bg: #EEF2F6;
+    --exploited: #9A3412; --exploited-bg: #FFF4E5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 15px; margin: 32px 0 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; }
+  p.lead { color: var(--muted); margin: 0 0 8px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+  display: flex; align-items: center; justify-content: center; flex: 1 1 320px; min-height: 120px; }
+  .panel.dark { background: linear-gradient(135deg, #0B2240, #0E2B4D 60%, #0D3B4A); border-color: transparent; }
+  .wordmark { display: flex; align-items: center; gap: 12px; }
+  .wordmark img { width: 52px; height: 52px; }
+  .wordmark .name { font-size: 30px; font-weight: 700; letter-spacing: -0.6px; line-height: 1; }
+  .wordmark .name .a { color: var(--navy-900); } .wordmark .name .b { color: var(--teal-600); }
+  .wordmark .tag { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: var(--muted); margin-top: 6px; }
+  .dark .wordmark .name .a { color: #FFFFFF; } .dark .wordmark .name .b { color: var(--teal-300); }
+  .dark .wordmark .tag { color: #9FB3C8; }
+  .sizes { display: flex; gap: 24px; align-items: end; }
+  .sizes figure { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+  .tab { display: inline-flex; align-items: center; gap: 8px; background: #E9EEF4; border-radius: 10px 10px 0 0;
+  padding: 8px 14px; font-size: 13px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; width: 100%; }
+  .swatch { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+  .swatch div { height: 64px; } .swatch span { display: block; padding: 8px 10px; font-size: 12px; }
+  .swatch b { display: block; font-size: 13px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  border-radius: 999px; padding: 4px 10px; }
+  .critical { color: var(--critical); background: var(--critical-bg); } .high { color: var(--high); background: var(--high-bg); }
+  .medium { color: var(--medium); background: var(--medium-bg); } .low { color: var(--low); background: var(--low-bg); }
+  .exploited { color: var(--exploited); background: var(--exploited-bg); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+  width: 100%; max-width: 420px; border-left: 4px solid var(--critical); }
+  .card .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .card .id { font-weight: 700; color: var(--navy-900); }
+  .card .meta { font-size: 13px; color: var(--muted); margin: 6px 0 8px; }
+  .card p { font-size: 14px; margin: 0; line-height: 1.5; }
+  .btn { font: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; padding: 10px 16px; cursor: pointer;
+  border: 1px solid transparent; }
+  .btn.primary { background: var(--teal-600); color: #fff; } .btn.ghost { background: #fff; color: var(--navy-900);
+  border-color: var(--border); }
+  .hero img { width: 100%; max-width: 560px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CallGuard: look and feel</h1>
+  <p class="lead">Logo, browser-tab icon, illustration, colours and building blocks for the website.</p>
+
+  <h2>Logo</h2>
+  <div class="row">
+    <div class="panel"><div class="wordmark"><img src="logo-mark.svg" alt="">
+      <div><div class="name"><span class="a">Call</span><span class="b">Guard</span></div>
+      <div class="tag">CONTACT-CENTER VULNERABILITY INTELLIGENCE</div></div></div></div>
+    <div class="panel dark"><div class="wordmark"><img src="logo-mark.svg" alt="">
+      <div><div class="name"><span class="a">Call</span><span class="b">Guard</span></div>
+      <div class="tag">CONTACT-CENTER VULNERABILITY INTELLIGENCE</div></div></div></div>
+  </div>
+
+  <h2>Icon at real sizes</h2>
+  <div class="row">
+    <div class="panel"><div class="sizes">
+      <figure><img src="logo-mark.svg" width="16" height="16" alt=""><figcaption>16 px</figcaption></figure>
+      <figure><img src="logo-mark.svg" width="32" height="32" alt=""><figcaption>32 px</figcaption></figure>
+      <figure><img src="logo-mark.svg" width="64" height="64" alt=""><figcaption>64 px</figcaption></figure>
+      <figure><img src="logo-mark.svg" width="128" height="128" alt=""><figcaption>128 px</figcaption></figure>
+    </div></div>
+    <div class="panel"><span class="tab"><img src="logo-mark.svg" width="16" height="16" alt="">CallGuard · Contact-center CVEs</span></div>
+  </div>
+
+  <h2>Illustration</h2>
+  <div class="row"><div class="panel hero"><img src="hero.svg" alt="CallGuard illustration"></div></div>
+
+  <h2>Colours</h2>
+  <div class="swatches">
+    <div class="swatch"><div style="background:#0E2B4D"></div><span><b>Navy</b>#0E2B4D · headings, header</span></div>
+    <div class="swatch"><div style="background:#16406E"></div><span><b>Deep blue</b>#16406E · links, accents</span></div>
+    <div class="swatch"><div style="background:#0B8C80"></div><span><b>Teal</b>#0B8C80 · buttons, highlights</span></div>
+    <div class="swatch"><div style="background:#5FE0CF"></div><span><b>Mint</b>#5FE0CF · glow on dark</span></div>
+    <div class="swatch"><div style="background:#F4F7FA"></div><span><b>Mist</b>#F4F7FA · page background</span></div>
+    <div class="swatch"><div style="background:#5B6B7F"></div><span><b>Slate</b>#5B6B7F · secondary text</span></div>
+    <div class="swatch"><div style="background:#FFF4E5"></div><span><b>Amber wash</b>#FFF4E5 · exploited</span></div>
+    <div class="swatch"><div style="background:#B42318"></div><span><b>Critical red</b>#B42318 · used sparingly</span></div>
+  </div>
+
+  <h2>Building blocks</h2>
+  <div class="row">
+    <div class="panel"><div class="badges">
+      <span class="badge critical">Critical 9.8</span><span class="badge high">High 7.2</span>
+      <span class="badge medium">Medium 5.3</span><span class="badge low">Low 2.7</span>
+      <span class="badge exploited">● Exploited</span><span class="badge exploited">Ransomware</span>
+    </div></div>
+    <div class="panel"><div class="card">
+      <div class="top"><span class="id">CVE-2024-41713</span><span class="badge critical">Critical 9.1</span></div>
+      <div class="meta">Mitel MiCollab · Published 21 Oct 2024 · <span class="badge exploited">● Exploited</span></div>
+      <p>Path traversal in NuPoint Unified Messaging lets an unauthenticated attacker view, corrupt or delete data.</p>
+    </div></div>
+    <div class="panel"><div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary">Ask CallGuard</button><button class="btn ghost">⬇ Export</button>
+      <button class="btn ghost">✉ Email</button></div></div>
+  </div>
+</main>
+</body>
+</html>

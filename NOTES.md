@@ -210,3 +210,26 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - Context precision scored 0 for a perfect search (M1), because the judge rates each one-CVE record on its own against a four-CVE answer. Metric results need sanity checks.
   - LLM judges are noisy: re-grading the same answer moved its faithfulness by 3 points. One run's p95 also swings with Nebius's speed, so p95 is measured over three runs.
   - The citation check now accepts CVEs named inside the records shown (CISA's "chained with" notes).
+
+## Phase 10: Give it a face (2026-10-17)
+
+- **Change of plan:** a branded website instead of a Streamlit chat page. It is plain HTML, CSS and JavaScript (`web/`), served by a small FastAPI server (`callguard.web`). Start it with `uv run scripts/serve.py`, then open http://localhost:8000.
+- **What's on the page:**
+  - The CallGuard brand: a shield-and-headset logo, an icon for the browser tab and a hero image, in navy, teal and mint (`web/static/brand/`).
+  - A "Data as of" badge, which turns amber when the data is more than 3 hours old.
+  - The latest vulnerabilities, newest first, with filters (vendor, product, severity, exploited only, text). A click opens the details: affected versions, CISA KEV and ransomware status, EPSS and links.
+  - The chat. Answers stream in word by word, with progress lines such as "Searching the records…". CVE IDs in an answer open the same details panel.
+  - Downloads: the filtered list as CSV, Excel or PDF, and any answer as a PDF.
+  - Email: CallGuard opens a draft in the user's own email app (a "mailto" link) for any number of recipients. The server never sends mail, so it needs no mail account or password. Email apps limit how long a draft can be, so long answers are shortened in the draft.
+- **Safety:**
+  - Text from the data and from the AI is cleaned (with DOMPurify) before it's shown, and only web and CVE links are allowed.
+  - The NVD notice and the "no CVE found doesn't mean safe" note appear on the page and in every PDF.
+- **One question at a time:** only one program can open the index, so the server answers questions in turn. Each answer runs in its own worker, which always releases the index, even if the visitor closes the page midway. The first version held the index while streaming, so one abandoned answer froze every later question.
+- **Testing:**
+  - 7 automated tests for the server, for 35 tests in all.
+  - A browser test that drives Chrome like a user (`scripts/check_website.py`, with Playwright). It covers the list, details, chat, PDF download, email checks and the phone layout: 12 of 12 checks pass.
+- **Bugs found by testing in a real browser:**
+  - **Hidden answer buttons.** The screen redraws the answer as it streams in. A redraw still waiting for its turn could paint the half-written answer back over the finished one, hiding its sources, its "Data as of" line and its buttons. This happened only when the last words and the "done" signal arrived together, so it appeared now and then. A test now forces that timing on every run.
+  - **Web codes in 46 records (44 Cisco, 2 Avaya).** NVD's text had "IM &amp; Presence" instead of "IM & Presence", plus non-breaking spaces. Cleaning now decodes only complete codes, so a web address like "?a=1&para=2" stays intact. The 46 records were cleaned and re-indexed, and search scored the same as before (18 of 18 found at least one expected CVE, 16 of 18 found them all).
+  - **PDFs.** The logo's two words had a gap, the footer ran into the page number, and "ransomware" broke mid-word in a narrow column.
+  - **Phone layout.** The filters were cut off, and the list scrolled inside a short box. On phones the filters now sit two per row, and the list flows with the page, 10 at a time.

@@ -1,7 +1,8 @@
-"""Tests for the sync's time handling. Run them with:  uv run pytest"""
+"""Tests for the sync: time handling and cleaning. Run them with:  uv run pytest"""
 
 from datetime import datetime, timedelta, timezone
 
+from callguard.products import english_description
 from callguard.sources import changed_query
 from callguard.sync import utc, windows
 
@@ -23,3 +24,9 @@ def test_changed_query_format():
     t = datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc)
     assert changed_query(t, t + timedelta(hours=2)) == (
         "lastModStartDate=2026-10-17T10%3A00%3A00.000%2B00%3A00&lastModEndDate=2026-10-17T12%3A00%3A00.000%2B00%3A00")
+
+
+def test_descriptions_lose_web_codes():
+    cve = {"descriptions": [{"lang": "es", "value": "otro"},
+                            {"lang": "en", "value": "IM &amp; Presence&nbsp;Service &lt;b&gt; see ?a=1&para=2"}]}
+    assert english_description(cve) == "IM & Presence Service <b> see ?a=1&para=2"
