@@ -1,5 +1,5 @@
 {
-  "collected_at": "2026-10-17T13:17:49+00:00",
+  "collected_at": "2026-10-17T15:15:39+00:00",
   "nvd": {
     "queries": [
       "Cisco",
@@ -20,7 +20,8 @@
       "Twilio"
     ],
     "cves_scanned": 7574,
-    "newest_change": "2026-10-16T20:17:57.050"
+    "newest_change": "2026-10-17T12:16:28.720",
+    "synced_through": "2026-10-17T15:15:39+00:00"
   },
   "kev": {
     "catalog_version": "2026.10.16",
@@ -29,7 +30,7 @@
   "epss": {
     "score_date": "2026-10-16"
   },
-  "records": 889,
-  "in_scope": 886,
+  "records": 895,
+  "in_scope": 892,
   "cloud_only": 3
 }

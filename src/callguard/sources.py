@@ -17,6 +17,14 @@ def keyword_query(keyword, exact=False):
     return query + "&keywordExactMatch" if exact else query
 
 
+def changed_query(start, end):
+    """NVD query text for every CVE changed between two UTC times (at most 120 days apart).
+    Rejected CVEs are included on purpose, so a sync can remove them."""
+    def stamp(t):
+        return quote(t.strftime("%Y-%m-%dT%H:%M:%S.000+00:00"))
+    return f"lastModStartDate={stamp(start)}&lastModEndDate={stamp(end)}"
+
+
 class Sources:
     def __init__(self, nvd_api_key=None):
         self.http = httpx.Client(timeout=120, follow_redirects=True, headers={"User-Agent": USER_AGENT})

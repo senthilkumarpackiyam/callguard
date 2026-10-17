@@ -22,6 +22,8 @@ from callguard.clean import versions_text
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX_DIR = ROOT / "data" / "index"
+PROCESSED = ROOT / "data" / "processed"
+PENDING = PROCESSED / "pending_index.json"  # index changes a sync couldn't apply yet
 COLLECTION = "cves"
 EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
 # Qwen3 embeddings work best when questions (not documents) carry a one-line task description
@@ -128,36 +130,74 @@ def open_index():
     return QdrantClient(path=str(INDEX_DIR / "qdrant"))
 
 
-def build(records, variant="card", progress=print):
-    """(Re)create the collection from clean records; returns a short summary."""
-    started = time.time()
+def make_points(records, variant, embedder, bm25, on_batch=None):
+    """Index entries for records: meaning vector, keyword vector, filter tags. Returns (points, reused)."""
     texts = [chunk_text(r, variant) for r in records]
-    embedder = Embedder()
-    vectors, reused = embedder.embed(texts, on_batch=lambda done, total: progress(f"   meaning: {done} of {total}"))
-    keywords = list(keyword_model().embed(texts))
-
-    client = open_index()
-    if client.collection_exists(COLLECTION):
-        client.delete_collection(COLLECTION)
-    client.create_collection(
-        COLLECTION,
-        vectors_config={"meaning": models.VectorParams(size=len(vectors[0]), distance=models.Distance.COSINE)},
-        sparse_vectors_config={"keywords": models.SparseVectorParams(modifier=models.Modifier.IDF)},
-    )
+    vectors, reused = embedder.embed(texts, on_batch=on_batch)
+    keywords = list(bm25.embed(texts))
     points = [models.PointStruct(
         id=point_id(r["id"]),
         vector={"meaning": v.tolist(),
                 "keywords": models.SparseVector(indices=k.indices.tolist(), values=k.values.tolist())},
         payload={**payload(r), "chunk": t})
         for r, t, v, k in zip(records, texts, vectors, keywords)]
+    return points, reused
+
+
+def build(records, variant="card", progress=print):
+    """(Re)create the collection from clean records; returns a short summary."""
+    started = time.time()
+    embedder = Embedder()
+    points, reused = make_points(records, variant, embedder, keyword_model(),
+                                 on_batch=lambda done, total: progress(f"   meaning: {done} of {total}"))
+    client = open_index()
+    if client.collection_exists(COLLECTION):
+        client.delete_collection(COLLECTION)
+    client.create_collection(
+        COLLECTION,
+        vectors_config={"meaning": models.VectorParams(size=len(points[0].vector["meaning"]),
+                                                       distance=models.Distance.COSINE)},
+        sparse_vectors_config={"keywords": models.SparseVectorParams(modifier=models.Modifier.IDF)},
+    )
     for i in range(0, len(points), 64):
         client.upsert(COLLECTION, points[i:i + 64])
     count = client.count(COLLECTION).count
     client.close()
+    PENDING.unlink(missing_ok=True)  # a full build includes every pending change
     (INDEX_DIR / "index_info.json").write_text(json.dumps(
         {"variant": variant, "model": EMBEDDING_MODEL, "points": count}, indent=2) + "\n")
-    return {"points": count, "embedded_now": len(texts) - reused, "reused": reused,
+    return {"points": count, "embedded_now": len(records) - reused, "reused": reused,
             "tokens": embedder.tokens_used, "seconds": round(time.time() - started)}
+
+
+def add_pending(upsert_ids=(), delete_ids=()):
+    """Note index changes for whichever program opens the index next (only one can have it open at a time)."""
+    pending = json.loads(PENDING.read_text()) if PENDING.exists() else {"upsert": [], "delete": []}
+    upserts = (set(pending["upsert"]) - set(delete_ids)) | set(upsert_ids)
+    deletes = (set(pending["delete"]) - set(upsert_ids)) | set(delete_ids)
+    temporary = PENDING.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"upsert": sorted(upserts), "delete": sorted(deletes)}, indent=1) + "\n")
+    os.replace(temporary, PENDING)  # all at once, so a reader never sees half a file
+
+
+def apply_pending(client, embedder, bm25):
+    """Bring the index up to date with the latest sync: an upsert for changed records, a delete for removed ones.
+    Returns how many index entries changed."""
+    if not PENDING.exists():
+        return 0
+    pending = json.loads(PENDING.read_text())
+    wanted = set(pending["upsert"])
+    records = [r for r in (json.loads(line) for line in open(PROCESSED / "cves.jsonl")) if r["id"] in wanted]
+    variant = json.loads((INDEX_DIR / "index_info.json").read_text())["variant"]
+    if records:
+        points, _ = make_points(records, variant, embedder, bm25)
+        for i in range(0, len(points), 64):
+            client.upsert(COLLECTION, points[i:i + 64])
+    if pending["delete"]:
+        client.delete(COLLECTION, points_selector=models.PointIdsList(
+            points=[point_id(cve_id) for cve_id in pending["delete"]]))
+    PENDING.unlink()
+    return len(records) + len(pending["delete"])
 
 
 class Searcher:
@@ -168,6 +208,11 @@ class Searcher:
         atexit.register(self.client.close)  # close cleanly, before Python starts shutting down
         self.embedder = Embedder()
         self.bm25 = keyword_model()
+        self.catch_up()
+
+    def catch_up(self):
+        """Apply index changes left by a sync that couldn't open the index itself."""
+        return apply_pending(self.client, self.embedder, self.bm25)
 
     def by_meaning(self, question, limit=10, query_filter=None):
         return self.client.query_points(COLLECTION, query=self.embedder.embed_query(question), using="meaning",

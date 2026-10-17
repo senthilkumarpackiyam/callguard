@@ -81,12 +81,16 @@ class Answerer:
         # wrap_openai records every model call in LangSmith (when tracing is on): prompt, answer, tokens, time
         self.llm = wrap_openai(OpenAI(base_url=os.getenv("NEBIUS_BASE_URL") or "https://api.tokenfactory.nebius.com/v1/",
                                       api_key=os.environ["NEBIUS_API_KEY"], max_retries=3, timeout=120))
-        manifest = self.retriever.manifest
-        self.as_of = (f"{manifest['collected_at'][:10]} (NVD changes up to {manifest['nvd']['newest_change'][:10]}, "
-                      f"CISA KEV catalog {manifest['kev']['catalog_version']}, "
-                      f"EPSS scores of {manifest['epss']['score_date']})")
         covered = [p.name for p in self.retriever.products if p.scope == "in"]
         self.system = SYSTEM_PROMPT.format(products="; ".join(covered))
+
+    @property
+    def as_of(self):
+        """How fresh the data is, read each time, so a sync that just ran shows up in the next answer."""
+        m = self.retriever.manifest
+        when = m["collected_at"][:16].replace("T", " ")
+        return (f"{when} UTC (NVD changes up to {m['nvd']['newest_change'][:10]}, "
+                f"CISA KEV catalog {m['kev']['catalog_version']}, EPSS scores of {m['epss']['score_date']})")
 
     def finish(self, answer, started):
         """Add the parts code guarantees: sources with NVD links, and the data date."""

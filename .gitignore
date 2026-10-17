@@ -19,3 +19,7 @@ data/index/
 # Notebook and Mac clutter
 .ipynb_checkpoints/
 .DS_Store
+
+# Temporary files the sync writes and removes
+data/processed/pending_index.json
+*.tmp

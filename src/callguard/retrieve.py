@@ -73,8 +73,19 @@ class Retriever:
         self.client = self.searcher.client
         self.products = load_products()
         self.rerankers = {}
-        self.manifest = json.loads((ROOT / "data" / "processed" / "manifest.json").read_text())
+        self.manifest_path = ROOT / "data" / "processed" / "manifest.json"
+        self.load_manifest()
+
+    def load_manifest(self):
+        self.manifest_stamp = self.manifest_path.stat().st_mtime
+        self.manifest = json.loads(self.manifest_path.read_text())
         self.as_of = self.manifest["collected_at"][:10]  # "past 7 days" counts back from this date
+
+    def catch_up(self):
+        """Has a sync run since the data was loaded? Pick up its changes first (a cheap timestamp check)."""
+        if self.manifest_path.stat().st_mtime != self.manifest_stamp:
+            self.load_manifest()
+            self.searcher.catch_up()
 
     def reranker(self, name):
         if name not in self.rerankers:
@@ -109,6 +120,7 @@ class Retriever:
 
         u: what the question means, if already worked out. search_text: a reworded search to use in place of
         the question's own words (Phase 7's rewrite step); filters still come from the original question."""
+        self.catch_up()
         u = u or understand(question, self.products)
         hits, seen = [], set()
 

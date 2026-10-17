@@ -165,3 +165,24 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - A version like "4.2" was checked against every product when no product was named. It's now checked only when we know whose version it is.
   - The answer script now forbids links that aren't in the records.
   - The refusal-wording check moved into shared code (`callguard.evaluate`).
+
+## Phase 8: Keep it fresh (2026-10-17)
+
+- **How a sync works (`callguard.sync`, run by `scripts/sync.py`):**
+  1. Ask NVD for every CVE changed since the last sync, in windows of at most 120 days (NVD's limit). Rejected CVEs are included, so they can be removed.
+  2. Add, update or remove each one, using the same product matching as Phase 2.
+  3. Refresh CISA KEV and FIRST EPSS for every record (both are small).
+  4. Save the records, the manifest (the "data as of" time) and a line in `data/processed/sync_log.jsonl`. Each file is written to a temporary copy and then swapped in, so a program reading at that moment never sees half a file.
+  5. Update the index in place (an "upsert"): only changed records are touched, and only changed text is re-embedded. Only one program can have the index open at a time, so if the chat app has it open, the sync queues the changes and the app applies them before its next answer.
+- **Schedule:** macOS's launchd runs the sync every 2 hours (`scripts/schedule_sync.py on|off|status`; the log is `~/Library/Logs/callguard-sync.log`). NVD asks automated tools to sync no more often than every two hours. The first run waited for macOS's permission to read the Documents folder; after one "Allow", runs finish in seconds.
+- **Results:**
+
+| Sync | NVD CVEs changed | Ours: new / updated / removed | Time |
+|---|---|---|---|
+| First real sync (18 hours of changes) | 544 | 0 / 0 / 0 | 8 s |
+| Simulated two weeks offline | 27,692 | 6 / 21 / 0 | 146 s |
+| First two scheduled runs | 0 | 0 / 0 / 0 | 2–4 s |
+
+- **The sync found CVEs the original pull had missed:** 6 Mitel MiVoice Office 400 flaws, published 2026-10-05, whose descriptions never name Mitel. Phase 2 searched descriptions for vendor names; the sync checks each changed CVE's product data. **Limitation:** a CVE that never changes again and doesn't name its vendor can still be missed. A full scan of NVD by product data would close that gap, and an NVD API key (10 times the rate limit) would make it practical.
+- **"Data as of" now includes the time of day (UTC)**, and a long-running app picks up a new sync before its next answer.
+- **A latency spike:** one answer took 45 s because Nebius responded slowly; the same question normally takes about 4 s. Phase 9's p95 figure will capture spikes like this honestly.
