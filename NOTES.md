@@ -141,3 +141,27 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
 - **Reasoning models think before they write:** in one test, DeepSeek-V4.1-Flash spent 836 of 900 tokens on hidden reasoning, which cut a long answer off. The limit is now 4,000 tokens, and any answer that still gets cut off is flagged. Two other "thinking" models (GLM-5.3-Flash, Kimi-K3) were dropped early, after using about 300 tokens of reasoning for a one-sentence reply.
 - **Exam corrections:** S2 gained CVE-2020-11797 (unauthenticated access to shared files), which the answers surfaced. M3's reference answer now describes the priority rule instead of naming two CVEs that the rule doesn't rank next.
 - **Automatic checks have blind spots:** curly apostrophes ("don’t") and other wording ("no visibility into your environment") made good refusals look like failures until the checker was fixed. Phase 9 uses a stronger grader.
+
+## Phase 7: The call flow with LangGraph (2026-10-17)
+
+- **The flow (`callguard.graph`)** has seven steps and three decision points. The diagram is in `reports/flow_check.md`.
+  - **Understand:** read the question. A product deliberately not covered goes straight to refuse.
+  - **Retrieve:** find the records. The route is one of lookup (a CVE is named), priority ("patch first"), newest ("past 7 days"), search, or cloud.
+  - **Check:** a quick model (Qwen3-235B) reads the records and says whether they're the right ones. If they aren't, it proposes a better search, which is used once (rephrase, then retrieve again).
+  - **Write:** DeepSeek-V4.1-Flash writes the answer from the records. If the check still says they don't fit, the model is told to say what's missing rather than stretch the records to fit.
+  - **Refuse** and **finish:** refusals decided by code, then the sources and the "data as of" line.
+- **LangSmith tracing:** every run records each step's inputs and outputs, and every model call with its prompt, answer, tokens and time, in the `callguard` project. `scripts/ask.py` prints a link for replaying the question.
+- **All 25 exam questions in three settings** (`reports/flow_check.md`):
+
+| Flow | Expected CVEs found | Refusals worded safely | Citations not in the records | Average time | p95 |
+|---|---|---|---|---|---|
+| Check every search | 90% | 5/5 | 0 | 4.2 s | 8.2 s |
+| **Check open questions only (default)** | 90% | 5/5 | 0 | 2.8 s | 4.0 s |
+| No check | 90% | 5/5 | 0 | 2.8 s | 4.4 s |
+
+- **Decision:** the check runs only for open-ended questions that name no product, vendor or CVE. Checking every search added time (p95 of 8.2 s) without finding more, and it raised a false alarm on M2, where "none is confirmed" is the right answer. When a product or vendor is named, filters already keep the search on topic.
+- **Every question type flows end to end:** exact lookups, versions, search, priority, newest, and all five kinds of refusal. The only misses are the two "list everything" questions: S1 found 4 of 5, S2 found 4 of 7.
+- **Fixes found by running the flow:**
+  - A version like "4.2" was checked against every product when no product was named. It's now checked only when we know whose version it is.
+  - The answer script now forbids links that aren't in the records.
+  - The refusal-wording check moved into shared code (`callguard.evaluate`).

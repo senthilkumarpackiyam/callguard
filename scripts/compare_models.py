@@ -12,27 +12,13 @@ import tomllib
 from pathlib import Path
 
 from callguard.answer import Answerer
+from callguard.evaluate import refusal_ok
 from callguard.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS = ["Qwen/Qwen3-235B-A22B-Instruct-2507", "Qwen/Qwen3-30B-A3B-Instruct-2507", "openai/gpt-oss-120b",
           "deepseek-ai/DeepSeek-V4.1-Flash"]
 QUESTION_IDS = ["E1", "V3", "V4", "S2", "M2", "M3", "M4", "F1", "R1", "R4", "R5"]
-# Wording a safe refusal must contain, for each reason (any one phrase from each group)
-REFUSAL_WORDS = {
-    "unknown product": [["no matching cve", "doesn't cover", "does not cover", "not covered", "isn't covered",
-                         "not in callguard"]],
-    "internal data": [["can't see", "cannot see", "can not see", "visibility", "don't have access",
-                       "do not have access", "not able to see", "no access", "can't determine", "cannot determine",
-                       "can't confirm", "cannot confirm"]],
-    "no records": [["no matching cve"], ["not mean", "doesn't mean", "does not mean", "not confirm", "isn't proof",
-                                         "not a guarantee", "not guarantee"]],
-}
-
-
-def refusal_ok(q, text):
-    lower = text.lower().replace("’", "'")  # models often write curly apostrophes: don’t, can’t
-    return all(any(phrase in lower for phrase in group) for group in REFUSAL_WORDS[q["reason"]])
 
 
 def main():
@@ -49,7 +35,7 @@ def main():
             a = answerer.answer(q["question"], retrieved=retrieved[q["id"]])
             covered = (sum(c in a.cited for c in q["cves"]) / len(q["cves"])) if q["cves"] else None
             rows.append({"q": q, "a": a, "covered": covered,
-                         "refusal_ok": refusal_ok(q, a.text) if q["expect"] == "refuse" else None})
+                         "refusal_ok": refusal_ok(q["reason"], a.text) if q["expect"] == "refuse" else None})
         results[model] = rows
         answered = [r["covered"] for r in rows if r["covered"] is not None]
         print(f"{model:40} expected CVEs cited: {statistics.mean(answered):.0%}  "

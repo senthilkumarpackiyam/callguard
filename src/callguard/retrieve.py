@@ -104,9 +104,12 @@ class Retriever:
         points, _ = self.client.scroll(COLLECTION, scroll_filter=query_filter, limit=2000, with_payload=True)
         return [p.payload["record"] for p in points]
 
-    def retrieve(self, question, k=5, reranker=DEFAULT_RERANKER):
-        """Return (the top k hits, what the question was understood to ask)."""
-        u = understand(question, self.products)
+    def retrieve(self, question, k=5, reranker=DEFAULT_RERANKER, u=None, search_text=None):
+        """Return (the top k hits, what the question was understood to ask).
+
+        u: what the question means, if already worked out. search_text: a reworded search to use in place of
+        the question's own words (Phase 7's rewrite step); filters still come from the original question."""
+        u = u or understand(question, self.products)
         hits, seen = [], set()
 
         def add(record, how):
@@ -128,7 +131,8 @@ class Retriever:
 
         # "More like this": a question that only names a CVE says nothing about what the flaw is,
         # so search with the named CVEs' descriptions too, to surface look-alikes (same bug, later version)
-        search_text = "\n".join([question] + [h.record["description"] for h in hits if h.how == "exact lookup"])
+        search_text = "\n".join([search_text or question]
+                                + [h.record["description"] for h in hits if h.how == "exact lookup"])
 
         # 3-4. Rank by rule, or search and rerank; relax the filters only if nothing matches
         found = []
@@ -154,8 +158,9 @@ class Retriever:
         for record, how in found:
             add(record, how)
 
-        # 5. A version named: affected first, then unknown, then not affected (exact lookups stay on top)
-        if u.version:
+        # 5. A version named: affected first, then unknown, then not affected (exact lookups stay on top).
+        # Only when we know whose version it is (a product or CVE was named); "4.2" alone could match anything.
+        if u.version and (u.products or u.cve_ids):
             named = [p.id for p in u.products] or None
             for h in hits:
                 h.version_check = check(h.record, u.version, named)

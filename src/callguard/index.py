@@ -4,6 +4,7 @@
 - keywords: BM25 scores exact words, giving rare words (a CVE number, a build like 12.6(2)ES3) more weight
 """
 
+import atexit
 import hashlib
 import json
 import os
@@ -164,6 +165,7 @@ class Searcher:
 
     def __init__(self):
         self.client = open_index()
+        atexit.register(self.client.close)  # close cleanly, before Python starts shutting down
         self.embedder = Embedder()
         self.bm25 = keyword_model()
 

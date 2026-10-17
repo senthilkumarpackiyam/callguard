@@ -7,10 +7,12 @@ The language model writes the answer from the records it's given and cites each 
 
 import os
 import time
+import warnings
 from dataclasses import dataclass, field
 from datetime import date
 
 from dotenv import load_dotenv
+from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 
 from callguard.index import ROOT
@@ -21,6 +23,8 @@ from callguard.understand import CVE_ID
 # It reasons before writing, and that hidden reasoning counts toward MAX_TOKENS, hence the generous limit.
 DEFAULT_MODEL = "deepseek-ai/DeepSeek-V4.1-Flash"
 MAX_TOKENS = 4000
+# Harmless: Nebius returns one response field in a shape the OpenAI library doesn't expect when tracing copies it
+warnings.filterwarnings("ignore", message="Pydantic serializer warnings", category=UserWarning)
 NVD_PAGE = "https://nvd.nist.gov/vuln/detail/{}"
 
 SYSTEM_PROMPT = """You are CallGuard, an assistant that answers questions about known security vulnerabilities (CVEs) \
@@ -28,8 +32,8 @@ in contact-center and unified-communications products, for Tier 2 support engine
 
 You get the question, facts that code has already worked out, and the CVE records CallGuard found. Rules:
 
-1. Answer only from the records provided. Never add CVEs, versions, scores, dates, exploitation details or fixes \
-that are not in them.
+1. Answer only from the records provided. Never add CVEs, versions, scores, dates, exploitation details, fixes or \
+links that are not in them.
 2. Cite every claim with its CVE number in square brackets, like [CVE-2024-41713]; write CVE numbers that way \
 every time, not in bold. Cite only CVEs that appear in the records.
 3. Start with a direct answer in one or two sentences. Then give short bullets, one per relevant CVE: what it is, \
@@ -74,8 +78,9 @@ class Answerer:
         load_dotenv(ROOT / ".env")
         self.model = model
         self.retriever = retriever or Retriever()
-        self.llm = OpenAI(base_url=os.getenv("NEBIUS_BASE_URL") or "https://api.tokenfactory.nebius.com/v1/",
-                          api_key=os.environ["NEBIUS_API_KEY"], max_retries=3, timeout=120)
+        # wrap_openai records every model call in LangSmith (when tracing is on): prompt, answer, tokens, time
+        self.llm = wrap_openai(OpenAI(base_url=os.getenv("NEBIUS_BASE_URL") or "https://api.tokenfactory.nebius.com/v1/",
+                                      api_key=os.environ["NEBIUS_API_KEY"], max_retries=3, timeout=120))
         manifest = self.retriever.manifest
         self.as_of = (f"{manifest['collected_at'][:10]} (NVD changes up to {manifest['nvd']['newest_change'][:10]}, "
                       f"CISA KEV catalog {manifest['kev']['catalog_version']}, "
@@ -91,31 +96,35 @@ class Answerer:
         answer.seconds = round(time.time() - started, 2)
         return answer
 
-    def refuse(self, question, reason, text, started):
-        return self.finish(Answer(question, text, "refusal", reason), started)
-
     def answer(self, question, k=5, retrieved=None):
+        """The whole answer in one straight line (Phase 6). Phase 7's call flow uses the same steps."""
         started = time.time()
         hits, u = retrieved or self.retriever.retrieve(question, k)
+        return self.finish(self.code_refusal(question, u, hits) or self.generate(question, u, hits), started)
+
+    def code_refusal(self, question, u, hits):
+        """Refusals code can decide on its own: no model call, so no chance of a confident wrong answer.
+        Returns an Answer, or None when the model should write the answer."""
         scopes = {p.scope for p in u.products}
         names = ", ".join(p.name for p in u.products)
-
-        # Refusals code can decide on its own: no model call, so no chance of a confident wrong answer
         if u.products and scopes == {"out"}:
-            return self.refuse(question, "out of scope", (
+            return Answer(question, (
                 f"CallGuard doesn't cover {names}; it was deliberately left out of scope, so it has no records to "
-                f"check. For {names}, see {u.products[0].vendor}'s security advisories."), started)
+                f"check. For {names}, see {u.products[0].vendor}'s security advisories."), "refusal", "out of scope")
         if u.products and scopes == {"cloud"} and not hits:
             vendor = u.products[0].vendor
-            return self.refuse(question, "cloud", (
+            return Answer(question, (
                 f"No matching CVE in CallGuard's data for {names}. It's a cloud service that {vendor} patches "
                 f"itself, and cloud services rarely get CVEs, so this does not mean it's free of vulnerabilities. "
-                f"Check {vendor}'s security bulletins or trust center."), started)
+                f"Check {vendor}'s security bulletins or trust center."), "refusal", "cloud")
         if not hits:
-            return self.refuse(question, "no records", (
+            return Answer(question, (
                 "No matching CVE in CallGuard's data. This does not mean the product or version is safe; check the "
-                "vendor's security advisories."), started)
+                "vendor's security advisories."), "refusal", "no records")
+        return None
 
+    def generate(self, question, u, hits, extra_notes=()):
+        """Have the model write the answer from the records, with the facts code has worked out."""
         notes = [f"Products named: {', '.join(f'{p.name} ({p.scope})' for p in u.products)}" if u.products else "",
                  f"Version asked about: {u.version}" if u.version else "",
                  "The question is about the user's own systems, which CallGuard can't see." if u.internal else "",
@@ -123,7 +132,7 @@ class Answerer:
                  "then highest severity): " + ", ".join(h.record["id"] for h in hits) if u.priority else "",
                  f"No CVEs in CallGuard's data were published in the past {u.recent_days} days (since "
                  f"{u.window_start}). The records below are the newest overall." if u.window_empty else "",
-                 "Records are listed newest first." if u.recent and not u.window_empty else ""]
+                 "Records are listed newest first." if u.recent and not u.window_empty else "", *extra_notes]
         records = "\n---\n".join(
             "\n".join(filter(None, [f"[{i}] {h.record['text']}",
                                     f"Version check by code: {h.version_check['status']}: {h.version_check['because']}"
@@ -143,7 +152,7 @@ class Answerer:
             text += "\n\n(This answer was cut short. Ask about fewer CVEs at a time for the full details.)"
         retrieved_ids = [h.record["id"] for h in hits]
         cited = list(dict.fromkeys(c.upper() for c in CVE_ID.findall(text)))
-        return self.finish(Answer(question, text, "answer", retrieved=retrieved_ids,
-                                  cited=[c for c in cited if c in retrieved_ids],
-                                  unsupported=[c for c in cited if c not in retrieved_ids],
-                                  model=self.model, tokens=response.usage.total_tokens), started)
+        return Answer(question, text, "answer", retrieved=retrieved_ids,
+                      cited=[c for c in cited if c in retrieved_ids],
+                      unsupported=[c for c in cited if c not in retrieved_ids],
+                      model=self.model, tokens=response.usage.total_tokens)

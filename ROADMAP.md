@@ -11,7 +11,7 @@ A learning roadmap for building CallGuard one phase at a time. Each phase ends w
 - [x] Phase 4: Make the data searchable
 - [x] Phase 5: Make search smart
 - [x] Phase 6: Answers with citations and safe refusals
-- [ ] Phase 7: Build the call flow with LangGraph
+- [x] Phase 7: Build the call flow with LangGraph
 - [ ] Phase 8: Keep it fresh
 - [ ] Phase 9: Grade it like a QA team
 - [ ] Phase 10: Give it a face
