@@ -71,6 +71,8 @@ class Answer:
     model: str | None = None
     seconds: float = 0.0
     tokens: int = 0
+    body: str = ""                 # the answer as written, before code adds sources and "data as of"
+    contexts: list = field(default_factory=list)  # exactly what the model was shown, record by record
 
 
 class Answerer:
@@ -95,7 +97,8 @@ class Answerer:
     def finish(self, answer, started):
         """Add the parts code guarantees: sources with NVD links, and the data date."""
         sources = ", ".join(f"[{c}]({NVD_PAGE.format(c)})" for c in answer.cited)
-        answer.text = answer.text.strip() + (f"\n\nSources: {sources}" if sources else "") + \
+        answer.body = answer.text.strip()
+        answer.text = answer.body + (f"\n\nSources: {sources}" if sources else "") + \
             f"\n\n_Data as of {self.as_of}._"
         answer.seconds = round(time.time() - started, 2)
         return answer
@@ -137,12 +140,12 @@ class Answerer:
                  f"No CVEs in CallGuard's data were published in the past {u.recent_days} days (since "
                  f"{u.window_start}). The records below are the newest overall." if u.window_empty else "",
                  "Records are listed newest first." if u.recent and not u.window_empty else "", *extra_notes]
-        records = "\n---\n".join(
-            "\n".join(filter(None, [f"[{i}] {h.record['text']}",
-                                    f"Version check by code: {h.version_check['status']}: {h.version_check['because']}"
-                                    if h.version_check else "",
-                                    f"Found by: {h.how}"]))
-            for i, h in enumerate(hits, 1))
+        blocks = ["\n".join(filter(None, [f"[{i}] {h.record['text']}",
+                                          f"Version check by code: {h.version_check['status']}: "
+                                          f"{h.version_check['because']}" if h.version_check else "",
+                                          f"Found by: {h.how}"]))
+                  for i, h in enumerate(hits, 1)]
+        records = "\n---\n".join(blocks)
         prompt = (f"Question: {question}\n\nToday's date: {date.today().isoformat()}. "
                   f"CallGuard's data was collected on {self.retriever.as_of}.\n\n"
                   "What code has worked out:\n" + ("\n".join(f"- {n}" for n in notes if n) or "- nothing extra")
@@ -155,8 +158,10 @@ class Answerer:
         if response.choices[0].finish_reason == "length":  # never show a cut-off answer without saying so
             text += "\n\n(This answer was cut short. Ask about fewer CVEs at a time for the full details.)"
         retrieved_ids = [h.record["id"] for h in hits]
+        # A CVE is supported if it was retrieved or is named inside a record (e.g. CISA's "chained with" note)
+        mentioned = {c.upper() for block in blocks for c in CVE_ID.findall(block)}
         cited = list(dict.fromkeys(c.upper() for c in CVE_ID.findall(text)))
         return Answer(question, text, "answer", retrieved=retrieved_ids,
                       cited=[c for c in cited if c in retrieved_ids],
-                      unsupported=[c for c in cited if c not in retrieved_ids],
-                      model=self.model, tokens=response.usage.total_tokens)
+                      unsupported=[c for c in cited if c not in retrieved_ids and c not in mentioned],
+                      model=self.model, tokens=response.usage.total_tokens, contexts=blocks)

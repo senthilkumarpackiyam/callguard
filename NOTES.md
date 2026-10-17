@@ -186,3 +186,27 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
 - **The sync found CVEs the original pull had missed:** 6 Mitel MiVoice Office 400 flaws, published 2026-10-05, whose descriptions never name Mitel. Phase 2 searched descriptions for vendor names; the sync checks each changed CVE's product data. **Limitation:** a CVE that never changes again and doesn't name its vendor can still be missed. A full scan of NVD by product data would close that gap, and an NVD API key (10 times the rate limit) would make it practical.
 - **"Data as of" now includes the time of day (UTC)**, and a long-running app picks up a new sync before its next answer.
 - **A latency spike:** one answer took 45 s because Nebius responded slowly; the same question normally takes about 4 s. Phase 9's p95 figure will capture spikes like this honestly.
+
+## Phase 9: Grade it like a QA team (2026-10-17)
+
+- **How:** all 25 exam questions ran through the full call flow in five setups (`scripts/run_exam.py`). RAGAS 0.4.3 graded faithfulness, context precision and context recall (`scripts/score_ragas.py`), with Qwen3-235B as the judge, a different model from the writer. RAGAS needs older LangChain libraries than the app, so grading runs in its own throwaway environment: the app sits the exam, and a separate grader marks it. `scripts/report_eval.py` writes `reports/evaluation.md`; the failure analysis is in `reports/failure_analysis.md`.
+- **Targets (final setup), all met:**
+  - Faithfulness: 92% on the 20 answerable questions; 88% including the three refusals the model wrote.
+  - Correct refusals: 5 of 5, with no false refusals.
+  - p95: 4.6 s over 75 answers from three runs; p50 2.4 s.
+- **Setups compared:**
+
+| Setup | Faithfulness (answerable) | Context precision | Context recall | Expected CVEs found | p95 (one run) |
+|---|---|---|---|---|---|
+| **Final: cards, 8 records for search questions** | 92% | 92% | 95% | 95% | 4.6 s |
+| Cards, 5 records | 91% | 90% | 89% | 90% | 7.3 s |
+| Cards, 5 records + MiniLM reranker | 90% | 94% | 89% | 88% | 7.4 s |
+| Cards without the header line | 93% | 92% | 89% | 88% | 6.0 s |
+| Description-only chunks | 89% | 91% | 89% | 85% | 11.6 s |
+
+- **Decision:** search questions now get 8 records instead of 5. This raised recall from 89% to 95% and expected CVEs found from 90% to 95%, mostly for "list everything" questions. The reranker stays off: it found fewer of the expected CVEs, and its small faithfulness gain is within the judge's noise.
+- **Main findings** (details in `reports/failure_analysis.md`):
+  - RAGAS faithfulness penalizes CallGuard's safety wording: refusals and "this doesn't mean safe" can't be found in any record. A second judge's audit of the 10 lowest-scoring answers found one minor unsupported phrase and no invented facts.
+  - Context precision scored 0 for a perfect search (M1), because the judge rates each one-CVE record on its own against a four-CVE answer. Metric results need sanity checks.
+  - LLM judges are noisy: re-grading the same answer moved its faithfulness by 3 points. One run's p95 also swings with Nebius's speed, so p95 is measured over three runs.
+  - The citation check now accepts CVEs named inside the records shown (CISA's "chained with" notes).

@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 from qdrant_client import models
 
-from callguard.index import COLLECTION, INDEX_DIR, ROOT, Searcher, point_id
+from callguard.index import INDEX_DIR, ROOT, Searcher, point_id
 from callguard.products import load_products
 from callguard.understand import CVE_ID, understand
 from callguard.versions import check
@@ -93,7 +93,7 @@ class Retriever:
         return self.rerankers[name]
 
     def lookup(self, cve_id):
-        points = self.client.retrieve(COLLECTION, ids=[point_id(cve_id)], with_payload=True)
+        points = self.client.retrieve(self.searcher.collection, ids=[point_id(cve_id)], with_payload=True)
         return points[0].payload["record"] if points else None
 
     def hybrid(self, question, limit=CANDIDATES, query_filter=None):
@@ -102,7 +102,7 @@ class Retriever:
         sparse = next(iter(self.searcher.bm25.query_embed(question)))
         keywords = models.SparseVector(indices=sparse.indices.tolist(), values=sparse.values.tolist())
         return self.client.query_points(
-            COLLECTION,
+            self.searcher.collection,
             prefetch=[models.Prefetch(query=dense, using="meaning", limit=limit, filter=query_filter),
                       models.Prefetch(query=keywords, using="keywords", limit=limit, filter=query_filter)],
             query=models.FusionQuery(fusion=models.Fusion.RRF), limit=limit, with_payload=True).points
@@ -112,7 +112,7 @@ class Retriever:
         return [p for _, p in sorted(zip(scores, points), key=lambda pair: -pair[0])]
 
     def all_matching(self, query_filter):
-        points, _ = self.client.scroll(COLLECTION, scroll_filter=query_filter, limit=2000, with_payload=True)
+        points, _ = self.client.scroll(self.searcher.collection, scroll_filter=query_filter, limit=2000, with_payload=True)
         return [p.payload["record"] for p in points]
 
     def retrieve(self, question, k=5, reranker=DEFAULT_RERANKER, u=None, search_text=None):

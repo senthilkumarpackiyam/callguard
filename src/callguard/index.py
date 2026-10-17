@@ -48,6 +48,8 @@ def chunk_text(record, variant="card"):
                      f"ransomware use: {record['exploited']['ransomware']}")
         if record["exploited"].get("summary"):
             lines.append(record["exploited"]["summary"])
+    if variant == "card-no-header":  # an experiment: is the header line (CVE, product, severity, KEV) worth having?
+        lines = lines[1:]
     return "\n".join(lines)
 
 
@@ -144,28 +146,30 @@ def make_points(records, variant, embedder, bm25, on_batch=None):
     return points, reused
 
 
-def build(records, variant="card", progress=print):
-    """(Re)create the collection from clean records; returns a short summary."""
+def build(records, variant="card", progress=print, collection=COLLECTION):
+    """(Re)create a collection from clean records; returns a short summary. Collections other than the main one
+    hold experiments (other chunk designs) side by side, for Phase 9's comparisons."""
     started = time.time()
     embedder = Embedder()
     points, reused = make_points(records, variant, embedder, keyword_model(),
                                  on_batch=lambda done, total: progress(f"   meaning: {done} of {total}"))
     client = open_index()
-    if client.collection_exists(COLLECTION):
-        client.delete_collection(COLLECTION)
+    if client.collection_exists(collection):
+        client.delete_collection(collection)
     client.create_collection(
-        COLLECTION,
+        collection,
         vectors_config={"meaning": models.VectorParams(size=len(points[0].vector["meaning"]),
                                                        distance=models.Distance.COSINE)},
         sparse_vectors_config={"keywords": models.SparseVectorParams(modifier=models.Modifier.IDF)},
     )
     for i in range(0, len(points), 64):
-        client.upsert(COLLECTION, points[i:i + 64])
-    count = client.count(COLLECTION).count
+        client.upsert(collection, points[i:i + 64])
+    count = client.count(collection).count
     client.close()
-    PENDING.unlink(missing_ok=True)  # a full build includes every pending change
-    (INDEX_DIR / "index_info.json").write_text(json.dumps(
-        {"variant": variant, "model": EMBEDDING_MODEL, "points": count}, indent=2) + "\n")
+    if collection == COLLECTION:
+        PENDING.unlink(missing_ok=True)  # a full build includes every pending change
+        (INDEX_DIR / "index_info.json").write_text(json.dumps(
+            {"variant": variant, "model": EMBEDDING_MODEL, "points": count}, indent=2) + "\n")
     return {"points": count, "embedded_now": len(records) - reused, "reused": reused,
             "tokens": embedder.tokens_used, "seconds": round(time.time() - started)}
 
@@ -203,7 +207,8 @@ def apply_pending(client, embedder, bm25):
 class Searcher:
     """Search the index by meaning or by keywords (Phase 5 combines them)."""
 
-    def __init__(self):
+    def __init__(self, collection=COLLECTION):
+        self.collection = collection
         self.client = open_index()
         atexit.register(self.client.close)  # close cleanly, before Python starts shutting down
         self.embedder = Embedder()
@@ -211,15 +216,16 @@ class Searcher:
         self.catch_up()
 
     def catch_up(self):
-        """Apply index changes left by a sync that couldn't open the index itself."""
-        return apply_pending(self.client, self.embedder, self.bm25)
+        """Apply index changes left by a sync that couldn't open the index itself (main collection only)."""
+        return apply_pending(self.client, self.embedder, self.bm25) if self.collection == COLLECTION else 0
 
     def by_meaning(self, question, limit=10, query_filter=None):
-        return self.client.query_points(COLLECTION, query=self.embedder.embed_query(question), using="meaning",
+        return self.client.query_points(self.collection, query=self.embedder.embed_query(question), using="meaning",
                                         limit=limit, query_filter=query_filter, with_payload=True).points
 
     def by_keywords(self, question, limit=10, query_filter=None):
         sparse = next(iter(self.bm25.query_embed(question)))
         return self.client.query_points(
-            COLLECTION, query=models.SparseVector(indices=sparse.indices.tolist(), values=sparse.values.tolist()),
+            self.collection,
+            query=models.SparseVector(indices=sparse.indices.tolist(), values=sparse.values.tolist()),
             using="keywords", limit=limit, query_filter=query_filter, with_payload=True).points

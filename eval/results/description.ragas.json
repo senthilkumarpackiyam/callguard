@@ -1,0 +1,111 @@
+{
+ "E1": {
+  "faithfulness": 1.0,
+  "llm_context_precision_with_reference": 0.99999999995,
+  "context_recall": 1.0
+ },
+ "E2": {
+  "faithfulness": 0.8260869565217391,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 0.8333333333333334
+ },
+ "E3": {
+  "faithfulness": 1.0,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "E4": {
+  "faithfulness": 0.9375,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "V1": {
+  "faithfulness": 0.6666666666666666,
+  "llm_context_precision_with_reference": 0.999999999975,
+  "context_recall": 1.0
+ },
+ "V2": {
+  "faithfulness": 0.9090909090909091,
+  "llm_context_precision_with_reference": 0.8666666666377778,
+  "context_recall": 1.0
+ },
+ "V3": {
+  "faithfulness": 1.0,
+  "llm_context_precision_with_reference": 0.99999999998,
+  "context_recall": 1.0
+ },
+ "V4": {
+  "faithfulness": 0.7727272727272727,
+  "llm_context_precision_with_reference": 0.99999999995,
+  "context_recall": 1.0
+ },
+ "V5": {
+  "faithfulness": 0.8888888888888888,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "S1": {
+  "faithfulness": 0.9032258064516129,
+  "llm_context_precision_with_reference": 0.9999999999666667,
+  "context_recall": 0.5
+ },
+ "S2": {
+  "faithfulness": 0.9736842105263158,
+  "llm_context_precision_with_reference": 0.99999999998,
+  "context_recall": 0.3333333333333333
+ },
+ "S3": {
+  "faithfulness": 0.7692307692307693,
+  "llm_context_precision_with_reference": 0.499999999975,
+  "context_recall": 0.5
+ },
+ "S4": {
+  "faithfulness": 1.0,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "S5": {
+  "faithfulness": 0.9032258064516129,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "M1": {
+  "faithfulness": 0.9090909090909091,
+  "llm_context_precision_with_reference": 0.0,
+  "context_recall": 1.0
+ },
+ "M2": {
+  "faithfulness": 0.918918918918919,
+  "llm_context_precision_with_reference": 0.99999999995,
+  "context_recall": 1.0
+ },
+ "M3": {
+  "faithfulness": 0.9183673469387755,
+  "llm_context_precision_with_reference": 0.9999999999666667,
+  "context_recall": 1.0
+ },
+ "M4": {
+  "faithfulness": 0.6086956521739131,
+  "llm_context_precision_with_reference": 0.99999999995,
+  "context_recall": 1.0
+ },
+ "F1": {
+  "faithfulness": 0.972972972972973,
+  "llm_context_precision_with_reference": 0.8041666666465626,
+  "context_recall": 0.6666666666666666
+ },
+ "F2": {
+  "faithfulness": 0.9545454545454546,
+  "llm_context_precision_with_reference": 0.9999999999,
+  "context_recall": 1.0
+ },
+ "R1": {
+  "faithfulness": 0.5263157894736842
+ },
+ "R4": {
+  "faithfulness": 0.7619047619047619
+ },
+ "R5": {
+  "faithfulness": 0.7857142857142857
+ }
+}

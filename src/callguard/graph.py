@@ -31,6 +31,9 @@ from callguard.understand import Understanding, understand
 load_dotenv(ROOT / ".env")  # before anything traces: LangSmith reads its settings from the environment
 
 K = 5
+# Search questions get more records: on the exam (Phase 9), 8 records raised context recall from 89% to 95%
+# and expected CVEs found from 90% to 95%, mainly for "list everything" questions, with no loss elsewhere.
+SEARCH_K = 8
 MAX_AFTER_REPHRASE = 8  # after a rephrase, keep the best of both searches: new results first
 CHECK_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507"  # quick and good at short JSON replies
 CHECK_PROMPT = """You check search results for CallGuard, an assistant that answers questions about known \
@@ -60,7 +63,10 @@ class State(TypedDict, total=False):
 
 
 class CallFlow:
-    def __init__(self, answerer=None, use_check="open"):
+    def __init__(self, answerer=None, use_check="open", reranker=None, search_k=SEARCH_K):
+        self.reranker = reranker  # a reranker model name, or None (the default; see Phase 5)
+        # How many records a search question gets. Lookups and rule-based routes always get K.
+        self.search_k = search_k
         # When the check runs: True = every search, False = never, "open" = only open-ended searches that name no
         # product, vendor or CVE. On the exam, checking every search added time (p95 5.9 s -> 7.5 s) without finding
         # more, and raised a false alarm; filters already keep searches on topic when a product or vendor is named.
@@ -83,7 +89,8 @@ class CallFlow:
         return {"understanding": u, "route": route, "rephrased": 0, "started": time.time()}
 
     def retrieve(self, state):
-        hits, _ = self.retriever.retrieve(state["question"], K, u=state["understanding"],
+        k = self.search_k if state["route"] in ("search", "cloud") else K
+        hits, _ = self.retriever.retrieve(state["question"], k, reranker=self.reranker, u=state["understanding"],
                                           search_text=state.get("search_text"))
         if state.get("rephrased"):  # keep what the first search found too, new results first
             seen = {h.record["id"] for h in hits}

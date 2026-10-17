@@ -1,0 +1,59 @@
+{
+ "E2": {
+  "faithfulness": 0.8,
+  "unsupported": []
+ },
+ "V1": {
+  "faithfulness": 0.8571428571428571,
+  "unsupported": []
+ },
+ "V5": {
+  "faithfulness": 0.8666666666666667,
+  "unsupported": []
+ },
+ "S1": {
+  "faithfulness": 0.8378378378378378,
+  "unsupported": []
+ },
+ "S3": {
+  "faithfulness": 0.75,
+  "unsupported": []
+ },
+ "S5": {
+  "faithfulness": 0.8275862068965517,
+  "unsupported": []
+ },
+ "M2": {
+  "faithfulness": 0.8888888888888888,
+  "unsupported": [
+   {
+    "statement": "Both exploited Cisco UC flaws in CallGuard's data are in CISA KEV",
+    "type": "GUIDANCE",
+    "why": "The records do not mention CallGuard or its data, so there is no support for the claim that these flaws are in CallGuard's data."
+   },
+   {
+    "statement": "Order follows patch priority: both are known exploited, so the higher exploit forecast comes first",
+    "type": "GUIDANCE",
+    "why": "The records do not mention any patch prioritization logic or ordering based on exploit forecast; this reflects external reasoning not supported by the records."
+   }
+  ]
+ },
+ "R1": {
+  "faithfulness": 0.06666666666666667,
+  "unsupported": []
+ },
+ "R4": {
+  "faithfulness": 0.8275862068965517,
+  "unsupported": []
+ },
+ "R5": {
+  "faithfulness": 0.8695652173913043,
+  "unsupported": [
+   {
+    "statement": "ransomware status unknown",
+    "type": "FACT",
+    "why": "The records do not mention anything about ransomware exploitation or status for CVE-2018-15617."
+   }
+  ]
+ }
+}
