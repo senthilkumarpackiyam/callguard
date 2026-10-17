@@ -8,12 +8,14 @@ Like a good agent's routine:
 5. A version named? The version checker marks each CVE affected, not affected or unknown.
 """
 
+import json
 from dataclasses import dataclass
+from datetime import date, timedelta
 
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 from qdrant_client import models
 
-from callguard.index import COLLECTION, INDEX_DIR, Searcher, point_id
+from callguard.index import COLLECTION, INDEX_DIR, ROOT, Searcher, point_id
 from callguard.products import load_products
 from callguard.understand import CVE_ID, understand
 from callguard.versions import check
@@ -71,6 +73,8 @@ class Retriever:
         self.client = self.searcher.client
         self.products = load_products()
         self.rerankers = {}
+        self.manifest = json.loads((ROOT / "data" / "processed" / "manifest.json").read_text())
+        self.as_of = self.manifest["collected_at"][:10]  # "past 7 days" counts back from this date
 
     def reranker(self, name):
         if name not in self.rerankers:
@@ -132,7 +136,14 @@ class Retriever:
             if u.priority or u.recent:
                 records = sorted(self.all_matching(query_filter), reverse=True,
                                  key=priority_key if u.priority else (lambda r: r["published"]))
-                found = [(r, "patch-priority rule" if u.priority else "newest first") for r in records]
+                how = "patch-priority rule" if u.priority else "newest first"
+                if u.recent_days and not u.priority and records:
+                    u.window_start = (date.fromisoformat(self.as_of) - timedelta(days=u.recent_days)).isoformat()
+                    within = [r for r in records if r["published"] >= u.window_start]
+                    u.window_empty = not within
+                    # nothing that recent: say so, and show the newest overall instead
+                    records, how = (within, how) if within else (records, "newest overall (none in the window)")
+                found = [(r, how) for r in records]
             else:
                 points = self.hybrid(search_text, CANDIDATES, query_filter)
                 if reranker and points:

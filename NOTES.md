@@ -111,3 +111,33 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
 - **The biggest gain came from understanding the question**, not from better ranking. Exact lookups, filters, priority rules and the version checker took search from 74% to 96%.
 - **Remaining misses:** S1 and S2 ask for every matching flaw (5 and 6 CVEs), which is more than fits in a top 5. Phase 6 may give list-type questions more room.
 - **Exam correction:** for S2, search found two correct answers the exam had missed: CVE-2023-25597 (download a shared file without logging in) and CVE-2022-36452 (upload malicious files without logging in). Both are now in the exam.
+
+## Phase 6: Answers with citations and safe refusals (2026-10-17)
+
+- **How an answer is made (`callguard.answer`):**
+  1. Retrieve the records, as in Phase 5.
+  2. Code handles three refusals itself, with no AI call: a deliberately excluded product, a cloud product with no records, and no records at all. These answer in under a second.
+  3. Otherwise the model gets three things: the question; the facts code has worked out (products, the version asked about, the patch order, or "nothing in the past 7 days"); and the CVE cards with their version-check results. The model writes the answer from those.
+  4. Code then adds the sources (NVD links) and the "data as of" line, and checks that every CVE cited was among the records the model was given.
+- **The agent's script (system prompt) has 11 rules:**
+  - answer only from the records, and cite every claim as [CVE-…]
+  - give a direct answer first, then one bullet per CVE
+  - trust the version checks and the patch order worked out by code
+  - "Unknown" ransomware use doesn't mean no, and severity isn't the same as risk
+  - say "No matching CVE…", plus "this does not mean safe", when nothing matches
+  - name any product CallGuard doesn't cover, and don't substitute other products
+  - say it can't see the user's systems when asked about them
+  - be brief
+- **Choosing the model:** four Nebius models answered 11 exam questions from the same records (`reports/model_comparison.md`):
+
+| Model | Expected CVEs cited | Refusals worded safely | Citations not in the records | Average time | Slowest |
+|---|---|---|---|---|---|
+| Qwen3-235B | 85% | 3/3 | 0 | 6.7 s | 15.5 s |
+| Qwen3-30B | 94% | 1/3 | 0 | 14.5 s | 22.9 s |
+| gpt-oss-120b | 72% | 2/3 | 0 | 1.8 s | 2.7 s |
+| **DeepSeek-V4.1-Flash (chosen)** | 94% | 3/3 | 0 | 3.7 s | 5.2 s |
+
+- **Why refusal tests matter:** asked about a product that doesn't exist ("Avaya CloudQueue Pro 4.2"), Qwen3-30B answered, in both runs: "Yes, Avaya CloudQueue Pro 4.2 is affected by two critical vulnerabilities in Avaya IP Office, which shares underlying components with CloudQueue Pro." That is a confident invention. DeepSeek answered: "CallGuard doesn't cover a product called 'Avaya CloudQueue Pro' … and I won't substitute findings from other Avaya products."
+- **Reasoning models think before they write:** in one test, DeepSeek-V4.1-Flash spent 836 of 900 tokens on hidden reasoning, which cut a long answer off. The limit is now 4,000 tokens, and any answer that still gets cut off is flagged. Two other "thinking" models (GLM-5.3-Flash, Kimi-K3) were dropped early, after using about 300 tokens of reasoning for a one-sentence reply.
+- **Exam corrections:** S2 gained CVE-2020-11797 (unauthenticated access to shared files), which the answers surfaced. M3's reference answer now describes the priority rule instead of naming two CVEs that the rule doesn't rank next.
+- **Automatic checks have blind spots:** curly apostrophes ("don’t") and other wording ("no visibility into your environment") made good refusals look like failures until the checker was fixed. Phase 9 uses a stronger grader.

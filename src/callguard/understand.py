@@ -14,6 +14,12 @@ RANSOMWARE = re.compile(r"ransomware", re.I)
 PRIORITY = re.compile(r"\b(patch|fix|remediate|address|upgrade)\b.{0,30}\bfirst\b|\bprioriti|\bmost urgent\b"
                       r"|\buntil last\b", re.I)
 RECENT = re.compile(r"\b(newest|latest|most recent|recently|past \d+ days|last \d+ days|this week)\b", re.I)
+WINDOW = [(re.compile(r"\b(?:past|last)\s+(\d+)\s+days?\b", re.I), None),
+          (re.compile(r"\b(?:past|last|this)\s+week\b", re.I), 7),
+          (re.compile(r"\b(?:past|last|this)\s+month\b", re.I), 30)]
+# Questions about the user's own systems ("Have we patched ...?"), which CallGuard can't see
+INTERNAL = re.compile(r"\b(have|has|did)\s+(we|our|my|they)\b.{0,60}\b(patch(ed)?|appl(y|ied)|install(ed)?|fix(ed)?|"
+                      r"update(d)?|upgrade(d)?)\b|\bour patch (status|level)\b", re.I)
 SEVERITY = [(re.compile(r"\bcritical\b", re.I), "CRITICAL"), (re.compile(r"\bhigh[- ]severity\b", re.I), "HIGH")]
 
 
@@ -29,6 +35,10 @@ class Understanding:
     ransomware: bool = False
     priority: bool = False
     recent: bool = False
+    recent_days: int | None = None  # "past 7 days" -> 7
+    internal: bool = False          # asks about the user's own systems
+    window_start: str | None = None  # set by retrieval: the first day of the "past N days" window
+    window_empty: bool = False       # set by retrieval: nothing was published in that window
 
 
 def find_products(question, products):
@@ -61,10 +71,19 @@ def find_vendors(question, products, named):
     return found
 
 
+def window_days(question):
+    for pattern, days in WINDOW:
+        m = pattern.search(question)
+        if m:
+            return days or int(m.group(1))
+    return None
+
+
 def understand(question, products):
     named = find_products(question, products)
     without_ids = CVE_ID.sub(" ", question)
     versions = VERSION.findall(without_ids)
+    days = window_days(question)
     return Understanding(
         question=question,
         cve_ids=list(dict.fromkeys(c.upper() for c in CVE_ID.findall(question))),
@@ -75,5 +94,7 @@ def understand(question, products):
         exploited=bool(EXPLOITED.search(question)),
         ransomware=bool(RANSOMWARE.search(question)),
         priority=bool(PRIORITY.search(question)),
-        recent=bool(RECENT.search(question)),
+        recent=bool(RECENT.search(question)) or days is not None,
+        recent_days=days,
+        internal=bool(INTERNAL.search(question)),
     )
