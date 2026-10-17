@@ -70,3 +70,16 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - F1 and F2 depend on the day they're asked, so grading works out their answers from the data at grading time.
   - R1–R5 cover five kinds of "no": an unknown product, a cloud product, an out-of-scope product, private data, and no matching records.
 - **Data fixes made along the way:** CISA's short summary is now kept in each exploited record, because that's where the chaining of CVE-2024-41713 and CVE-2024-55550 is recorded. `scripts/collect.py --offline` re-cleans the saved downloads in about a second.
+
+## Phase 4: Make the data searchable (2026-10-17)
+
+- **Embedding model:** Qwen/Qwen3-Embedding-8B, the only embedding model on the Nebius account. It turns each text into 4,096 numbers. As the model recommends, questions get a one-line task description ("Instruct: … Query: …") and records don't.
+- **What gets embedded (the chunk):** one CVE per chunk. Each chunk holds a header line (CVE, products, severity, KEV status), the description, the affected versions, the weakness, and the exploitation note with CISA's summary. Three things stay out: the EPSS score and last-updated date, because they change daily (they're kept as filter tags instead), and links, because URLs blur meaning. Embedding all 889 took 122 seconds and 191,610 tokens. Embeddings are cached in `data/index/`, so a rebuild only pays for text that changed.
+- **The index:** Qdrant runs on the Mac (`data/index/qdrant`) with two searches side by side. Search by meaning uses cosine similarity between embeddings. Search by keywords uses BM25, where IDF weighting makes rare words count more. Each CVE also carries filter tags: products, vendors, scope, published date and year, severity, CVSS, KEV, ransomware, EPSS and CWE.
+- **First searches (top 5):**
+  - "MiCollab path traversal": search by meaning returned exactly the 5 MiCollab path traversal CVEs; search by keywords found 4 of them.
+  - "CVE-2024-41713": search by keywords put it first. Search by meaning missed it completely and returned CVEs with similar-looking numbers (41711, 41714), because embeddings blur numbers.
+  - Finesse SSRF described in plain words: search by meaning found 4 of the 5 expected CVEs; search by keywords found 2.
+  - "Finesse 12.6(2)ES3": neither search handles versions well, which is why Phase 5 checks versions in code.
+  - A Bluetooth attack on Mitel phones: both searches put CVE-2020-27639 first.
+- **Lesson:** each kind of search succeeds where the other fails, which is why Phase 5 combines them (hybrid search).
