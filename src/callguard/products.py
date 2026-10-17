@@ -1,5 +1,6 @@
 """CallGuard's product list: load config/products.toml and match CVE records to products."""
 
+import re
 import tomllib
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
@@ -15,22 +16,31 @@ class Product:
     vendor: str
     scope: str  # "in", "cloud" or "out"
     aka: tuple[str, ...] = ()
+    keywords: tuple[str, ...] = ()
+    vendor_names: tuple[str, ...] = ()
     cpe: tuple[str, ...] = ()
     affected: tuple[str, ...] = ()
     exclude: tuple[str, ...] = ()
 
-    def matches(self, cpe_names, vendor_entries):
-        """True if any of a CVE's product names belongs to this product."""
-        if any(fnmatchcase(name, pattern) for name in cpe_names for pattern in self.cpe):
-            return True
-        for vendor, product in vendor_entries:
-            if any(text in product for text in self.exclude):
-                continue
-            for pattern in self.affected:
-                want_vendor, _, want_product = (part.strip() for part in pattern.partition("|"))
-                if want_vendor in vendor and want_product in product:
-                    return True
+    def owns_cpe(self, cpe_name):
+        """True if an NVD product name ("vendor:product") belongs to this product."""
+        return any(fnmatchcase(cpe_name, pattern) for pattern in self.cpe)
+
+    def owns_entry(self, vendor, product):
+        """True if a vendor-list entry (vendor, product), both lowercase, belongs to this product."""
+        if any(text in product for text in self.exclude):
+            return False
+        for pattern in self.affected:
+            want_vendor, _, want_product = (part.strip() for part in pattern.partition("|"))
+            if want_vendor in vendor and want_product in product:
+                return True
         return False
+
+    def mentioned_in(self, text):
+        """True if a description names this product's vendor and one of its keywords, as whole words."""
+        vendors = self.vendor_names or (self.vendor,)
+        return any(v in text for v in vendors) and any(
+            re.search(rf"(?<!\w){re.escape(k)}(?!\w)", text) for k in self.keywords)
 
 
 def load_products(path=PRODUCTS_FILE):
@@ -58,7 +68,20 @@ def product_names(cve):
     return cpe_names, vendor_entries
 
 
+def english_description(cve):
+    return next((d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"), "")
+
+
 def match_products(cve, products):
-    """Return the products a CVE record affects."""
+    """Return (products the CVE affects, how we know): "product data", "description" or "none".
+
+    The description is only used when the record has no product data at all.
+    """
     cpe_names, vendor_entries = product_names(cve)
-    return [p for p in products if p.matches(cpe_names, vendor_entries)]
+    if cpe_names or vendor_entries:
+        found = [p for p in products
+                 if any(p.owns_cpe(n) for n in cpe_names) or any(p.owns_entry(v, n) for v, n in vendor_entries)]
+        return found, "product data" if found else "none"
+    text = english_description(cve)
+    found = [p for p in products if p.mentioned_in(text)]
+    return found, "description" if found else "none"

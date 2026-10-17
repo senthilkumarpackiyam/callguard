@@ -1,0 +1,35 @@
+{
+  "collected_at": "2026-10-17T13:17:49+00:00",
+  "nvd": {
+    "queries": [
+      "Cisco",
+      "Avaya",
+      "Mitel",
+      "ShoreTel",
+      "Aastra",
+      "Asterisk",
+      "Digium",
+      "Sangoma",
+      "FreePBX",
+      "Genesys",
+      "Verint",
+      "Five9",
+      "Amazon Connect",
+      "CXone",
+      "inContact",
+      "Twilio"
+    ],
+    "cves_scanned": 7574,
+    "newest_change": "2026-10-16T20:17:57.050"
+  },
+  "kev": {
+    "catalog_version": "2026.10.16",
+    "released": "2026-10-16T17:15:48.8752Z"
+  },
+  "epss": {
+    "score_date": "2026-10-16"
+  },
+  "records": 889,
+  "in_scope": 886,
+  "cloud_only": 3
+}

@@ -6,7 +6,7 @@ A learning roadmap for building CallGuard one phase at a time. Each phase ends w
 
 - [x] Phase 0: Set up your workshop
 - [x] Phase 1: Meet the data
-- [ ] Phase 2: Collect and clean the data
+- [x] Phase 2: Collect and clean the data
 - [ ] Phase 3: Write the exam first
 - [ ] Phase 4: Make the data searchable
 - [ ] Phase 5: Make search smart

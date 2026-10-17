@@ -8,6 +8,8 @@
 # cpe       NVD's product names, as "vendor:product" (* matches anything)
 # affected  names in the vendor's own list, as "vendor | product" (text to look for, any case)
 # exclude   skip vendor-list entries whose product name contains this text
+# keywords  used only when a CVE has no product data at all: the description must name the
+#           vendor (vendor_names, default: vendor) and one of these phrases, as whole words
 
 # ---------- Cisco ----------
 
@@ -17,6 +19,7 @@ name = "Cisco Unified Communications Manager"
 vendor = "Cisco"
 scope = "in"
 aka = ["CUCM", "CallManager", "Unified CM", "UCM", "Business Edition 6000"]
+keywords = ["Unified Communications Manager", "Unified CM", "CallManager", "Business Edition 6000"]
 cpe = ["cisco:unified_communications_manager", "cisco:unified_callmanager", "cisco:call_manager",
        "cisco:unified_communications_manager_session_management_edition", "cisco:business_edition_*"]
 affected = ["cisco | unified communications manager", "cisco | unified_communications_manager"]
@@ -28,6 +31,7 @@ name = "Cisco Unified CM IM and Presence"
 vendor = "Cisco"
 scope = "in"
 aka = ["IM&P", "IM and Presence", "CUPS", "Cisco Unified Presence"]
+keywords = ["IM and Presence", "IM & Presence", "Unified Presence"]
 cpe = ["cisco:unified_communications_manager_im*", "cisco:unified_presence*"]
 affected = ["cisco | im and presence", "cisco | im & presence", "cisco | im_and_presence", "cisco | unified presence"]
 exclude = ["telepresence"]
@@ -38,6 +42,7 @@ name = "Cisco Unity Connection"
 vendor = "Cisco"
 scope = "in"
 aka = ["CUC", "Unity Connection", "Unity"]
+keywords = ["Unity Connection"]
 cpe = ["cisco:unity_connection"]
 affected = ["cisco | unity connection"]
 
@@ -47,6 +52,7 @@ name = "Cisco Unified Contact Center Express"
 vendor = "Cisco"
 scope = "in"
 aka = ["UCCX", "CCX", "IPCC Express", "CRS"]
+keywords = ["Unified Contact Center Express", "Unified CCX", "IPCC Express"]
 cpe = ["cisco:unified_contact_center_express*", "cisco:unified_ccx", "cisco:unified_ip_contact_center_express",
        "cisco:customer_response_solution", "cisco:customer_response_applications", "cisco:crs"]
 affected = ["cisco | contact center express"]
@@ -57,6 +63,7 @@ name = "Cisco Unified / Packaged Contact Center Enterprise"
 vendor = "Cisco"
 scope = "in"
 aka = ["UCCE", "PCCE", "ICM", "IPCC Enterprise", "CCMP"]
+keywords = ["Unified Contact Center Enterprise", "Packaged Contact Center Enterprise", "Contact Center Management Portal", "Contact Center Domain Manager", "Unified ICM"]
 cpe = ["cisco:unified_contact_center_enterprise", "cisco:packaged_contact_center_enterprise",
        "cisco:unified_contact_center_management_portal", "cisco:unified_contact_center_domain_manager",
        "cisco:unified_contact_center_hosted", "cisco:unified_icm_hosted",
@@ -70,6 +77,7 @@ name = "Cisco Finesse"
 vendor = "Cisco"
 scope = "in"
 aka = ["Finesse", "Finesse agent desktop"]
+keywords = ["Finesse"]
 # Exactly "cisco:finesse": the old PIX/ASA firewall software was also called "Finesse"
 cpe = ["cisco:finesse"]
 affected = ["cisco | finesse"]
@@ -80,6 +88,7 @@ name = "Cisco Unified Customer Voice Portal"
 vendor = "Cisco"
 scope = "in"
 aka = ["CVP", "Customer Voice Portal"]
+keywords = ["Customer Voice Portal"]
 cpe = ["cisco:unified_customer_voice_portal", "cisco:customer_voice_portal"]
 affected = ["cisco | customer voice portal"]
 
@@ -89,6 +98,7 @@ name = "Cisco Unified Intelligence Center"
 vendor = "Cisco"
 scope = "in"
 aka = ["CUIC", "Intelligence Center"]
+keywords = ["Unified Intelligence Center"]
 cpe = ["cisco:unified_intelligence_center"]
 affected = ["cisco | intelligence center"]
 
@@ -98,6 +108,7 @@ name = "Cisco Unified IP IVR (legacy)"
 vendor = "Cisco"
 scope = "out"
 aka = ["IP IVR"]
+keywords = ["IP IVR", "IP Interactive Voice Response"]
 cpe = ["cisco:unified_ip_interactive_voice_response", "cisco:unified_ip_ivr"]
 affected = ["cisco | ip ivr"]
 
@@ -107,6 +118,7 @@ name = "Cisco Emergency Responder"
 vendor = "Cisco"
 scope = "out"
 aka = ["CER", "Emergency Responder"]
+keywords = ["Emergency Responder"]
 cpe = ["cisco:emergency_responder"]
 affected = ["cisco | emergency responder"]
 
@@ -118,6 +130,7 @@ name = "Avaya Aura Communication Manager"
 vendor = "Avaya"
 scope = "in"
 aka = ["Aura CM", "Avaya CM", "Communication Manager", "Definity"]
+keywords = ["Communication Manager"]
 cpe = ["avaya:communication_manager", "avaya:aura_communication_manager"]
 affected = ["avaya | communication manager"]
 
@@ -127,6 +140,7 @@ name = "Avaya IP Office"
 vendor = "Avaya"
 scope = "in"
 aka = ["IP Office", "IPO"]
+keywords = ["IP Office"]
 cpe = ["avaya:ip_office*"]
 affected = ["avaya | ip office", "avaya | ip_office"]
 
@@ -136,6 +150,7 @@ name = "Avaya Experience Portal and Orchestration Designer"
 vendor = "Avaya"
 scope = "in"
 aka = ["AAEP", "Experience Portal", "Orchestration Designer"]
+keywords = ["Experience Portal", "Orchestration Designer"]
 cpe = ["avaya:aura_experience_portal", "avaya:experience_portal*", "avaya:aura_orchestration_designer",
        "avaya:orchestration_designer"]
 affected = ["avaya | experience portal", "avaya | orchestration designer"]
@@ -146,6 +161,7 @@ name = "Avaya Aura platform (Session Manager, System Manager, Utility Services, 
 vendor = "Avaya"
 scope = "in"
 aka = ["Session Manager", "System Manager", "SMGR", "ASM", "AVP", "Utility Services", "WebLM", "Aura Messaging"]
+keywords = ["Session Manager", "System Manager", "Utility Services", "Appliance Virtualization Platform", "WebLM", "Aura Messaging"]
 cpe = ["avaya:aura_session_manager", "avaya:session_manager", "avaya:aura_system_manager", "avaya:system_manager",
        "avaya:aura_utility_services", "avaya:utility_services", "avaya:aura_appliance_virtualization_platform*",
        "avaya:weblm", "avaya:aura_messaging"]
@@ -158,6 +174,7 @@ name = "Avaya IX Workforce Engagement"
 vendor = "Avaya"
 scope = "in"
 aka = ["IX Workforce Engagement", "Avaya WFO"]
+keywords = ["Workforce Engagement"]
 cpe = ["avaya:ix_workforce_engagement"]
 affected = ["avaya | workforce engagement"]
 
@@ -167,6 +184,7 @@ name = "Avaya legacy products (SES, one-X, IP Softphone, 4600 phones, S8500/S870
 vendor = "Avaya"
 scope = "out"
 aka = ["SIP Enablement Services", "one-X", "IP Softphone"]
+keywords = ["SIP Enablement Services", "one-X", "IP Softphone"]
 cpe = ["avaya:sip_enablement_services", "avaya:one-x*", "avaya:ip_soft_phone", "avaya:46*", "avaya:s8500",
        "avaya:s8700", "avaya:argent_office"]
 affected = []
@@ -179,6 +197,7 @@ name = "Mitel MiCollab"
 vendor = "Mitel"
 scope = "in"
 aka = ["MiCollab", "MiCollab AWV", "NuPoint"]
+keywords = ["MiCollab", "NuPoint"]
 cpe = ["mitel:micollab*"]
 affected = ["mitel | micollab"]
 
@@ -188,6 +207,8 @@ name = "Mitel MiVoice Connect (ShoreTel)"
 vendor = "Mitel"
 scope = "in"
 aka = ["MiVoice Connect", "ShoreTel", "Connect ONSITE"]
+keywords = ["MiVoice Connect", "Connect ONSITE", "ShoreTel"]
+vendor_names = ["Mitel", "ShoreTel"]
 cpe = ["mitel:mivoice_connect*", "mitel:connect_onsite", "mitel:st14.2", "mitel:st_14.2", "mitel:shoretel*",
        "shoretel:*"]
 affected = ["mitel | mivoice connect", "mitel | mivoice_connect", "shoretel | "]
@@ -198,6 +219,7 @@ name = "Mitel MiVoice Business"
 vendor = "Mitel"
 scope = "in"
 aka = ["MiVoice Business", "MiVB", "MCD", "MiVoice Business Express"]
+keywords = ["MiVoice Business", "3300 ICP", "3300 Integrated Communications Platform"]
 cpe = ["mitel:mivoice_business*"]
 affected = ["mitel | mivoice business", "mitel | mivoice_business"]
 
@@ -207,6 +229,7 @@ name = "Mitel MiContact Center"
 vendor = "Mitel"
 scope = "in"
 aka = ["MiContact Center", "MiCC", "MiCC Business"]
+keywords = ["MiContact Center"]
 cpe = ["mitel:micontact_center*"]
 affected = ["mitel | micontact center", "mitel | micontact_center"]
 
@@ -216,6 +239,8 @@ name = "Mitel MiVoice Office 400"
 vendor = "Mitel"
 scope = "in"
 aka = ["MiVoice Office 400", "MiVO400", "Aastra 400"]
+keywords = ["MiVoice Office 400", "Aastra 400"]
+vendor_names = ["Mitel", "Aastra"]
 cpe = ["mitel:mivoice_office_400"]
 affected = ["mitel | office 400", "mitel | office_400"]
 
@@ -225,6 +250,8 @@ name = "Mitel MiVoice MX-ONE"
 vendor = "Mitel"
 scope = "in"
 aka = ["MX-ONE", "MiVoice MX-ONE"]
+keywords = ["MX-ONE"]
+vendor_names = ["Mitel", "Aastra"]
 cpe = ["mitel:mivoice_mx-one", "mitel:mx-one"]
 affected = ["mitel | mx-one"]
 
@@ -234,6 +261,7 @@ name = "Mitel SIP phones (6800 and 6900 series)"
 vendor = "Mitel"
 scope = "in"
 aka = ["Mitel 6800 phones", "Mitel 6900 phones", "6869i", "6930", "6940"]
+keywords = ["6800 Series", "6900 Series", "6900w Series", "6970 Conference Unit", "SIP Phones", "SIP phones"]
 cpe = ["mitel:68*", "mitel:69*"]
 affected = ["mitel | 68", "mitel | 69", "mitel | sip_phone"]
 
@@ -245,6 +273,8 @@ name = "Asterisk (open source and Certified Asterisk)"
 vendor = "Sangoma"
 scope = "in"
 aka = ["Asterisk", "Certified Asterisk", "AsteriskNOW", "Digium Asterisk"]
+keywords = ["Asterisk"]
+vendor_names = ["Asterisk", "Digium", "Sangoma"]
 cpe = ["asterisk:*", "digium:*asterisk*", "digium:s800i*", "digium:open_source", "sangoma:*asterisk*"]
 affected = ["asterisk | asterisk", "sangoma | asterisk", "digium | asterisk"]
 
@@ -254,6 +284,8 @@ name = "FreePBX (including its modules)"
 vendor = "Sangoma"
 scope = "in"
 aka = ["FreePBX", "PBXact"]
+keywords = ["FreePBX", "PBXact"]
+vendor_names = ["FreePBX", "Sangoma"]
 cpe = ["freepbx:*", "sangoma:freepbx*", "coalescent_systems:freepbx", "sangoma:restapps", "sangoma:voicemail",
        "sangoma:filestore"]
 affected = ["freepbx | ", "sangoma | freepbx", "coalescent_systems | freepbx"]
@@ -266,6 +298,7 @@ name = "Genesys Engage / PureConnect (on-prem)"
 vendor = "Genesys"
 scope = "in"
 aka = ["Genesys Engage", "PureConnect", "PureEngage", "CIC", "GAX", "iWD"]
+keywords = ["PureConnect", "PureEngage", "Genesys Engage", "Genesys Administrator", "Workload Distribution", "Genesys Workforce Management", "Interaction Center"]
 cpe = ["genesys:*"]
 affected = ["genesys | "]
 exclude = ["cloud"]
@@ -276,6 +309,7 @@ name = "Verint Workforce Optimization / Impact 360 / Engagement"
 vendor = "Verint"
 scope = "in"
 aka = ["Verint WFO", "Impact 360", "Verint Engagement"]
+keywords = ["Workforce Optimization", "Impact 360", "Engagement Management", "WFO"]
 # Named products only: Verint's old video cameras are not contact-center products
 cpe = ["verint:workforce_optimization", "verint:impact_360", "verint:engagement_management",
        "verint:desktop_and_process_analytics", "verint:desktop_resources"]
@@ -289,6 +323,8 @@ name = "Amazon Connect"
 vendor = "Amazon"
 scope = "cloud"
 aka = ["Amazon Connect", "AWS Connect"]
+keywords = ["Amazon Connect"]
+vendor_names = ["Amazon", "AWS"]
 cpe = ["amazon:connect*"]
 affected = ["amazon | connect"]
 
@@ -298,6 +334,8 @@ name = "NICE CXone"
 vendor = "NICE"
 scope = "cloud"
 aka = ["CXone", "NICE CXone", "inContact", "NICE inContact"]
+keywords = ["CXone", "inContact"]
+vendor_names = ["NICE"]
 cpe = ["nice:cxone*", "nice:incontact*"]
 affected = ["nice | cxone", "nice | incontact"]
 
@@ -307,6 +345,7 @@ name = "Five9"
 vendor = "Five9"
 scope = "cloud"
 aka = ["Five9"]
+keywords = ["Five9"]
 cpe = ["five9:*"]
 affected = ["five9 | "]
 
@@ -316,6 +355,7 @@ name = "Genesys Cloud CX"
 vendor = "Genesys"
 scope = "cloud"
 aka = ["Genesys Cloud", "Genesys Cloud CX", "PureCloud"]
+keywords = ["Genesys Cloud", "PureCloud"]
 cpe = ["genesys:cloud*", "genesys:purecloud*"]
 affected = ["genesys | cloud"]
 
@@ -325,5 +365,6 @@ name = "Twilio Flex"
 vendor = "Twilio"
 scope = "cloud"
 aka = ["Twilio Flex", "Twilio"]
+keywords = ["Twilio Flex"]
 cpe = ["twilio:flex*"]
 affected = ["twilio | flex"]

@@ -46,3 +46,13 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
 
 - The project is in `~/Documents`, which iCloud syncs. iCloud marks files whose names start with a dot as hidden, and Python skips hidden `.pth` files, so our own code became invisible to Python.
 - **Fix:** the virtual environment now lives outside iCloud, at `~/.venvs/callguard`, and `.venv` is a shortcut (symlink) to it. This also stops iCloud from uploading about 15,000 package files.
+
+## Phase 2: Collect and clean (2026-10-17)
+
+- **Pipeline:** `scripts/collect.py` runs four steps. **Collect:** ask NVD for every CVE that mentions each vendor (16 searches, 7,574 CVEs, about 3 minutes without an API key). **Filter:** keep our products using `config/products.toml`. **Enrich:** add KEV and EPSS. **Clean and save:** write `data/processed/cves.jsonl` (one record per line) and `manifest.json` (the "data as of" times). Raw downloads stay in `data/raw/`, which Git ignores.
+- **Result:** 889 records: 886 for in-scope products and 3 for Five9 (cloud). That's more than the 740 estimated in Phase 1, because searching by vendor finds CVEs that searching by product phrase missed. For example, Unity Connection went from 22 to 72 CVEs, CVP from 2 to 17 and CUIC from 4 to 28.
+- **The description fallback earns its place:** 7 CVEs had no product data at all. Most are recent Mitel flaws that MITRE filed and NVD put on hold ("Deferred"). One is CVE-2025-52913, a critical (9.8) MiCollab path traversal much like CVE-2024-41713.
+- **Version data is messy:** vendors write versions as ranges ("before 17.0.9"), as lists of exact builds (Cisco lists 28 builds like `12.6(1)ES1`), or only in the description ("through 9.8 SP2 (9.8.2.12)"). Each record keeps the structured ranges plus a readable summary.
+- **Severity:** CVSS 3.1 is preferred so that scores can be compared. 366 older CVEs only have CVSS v2, which has no "Critical" level.
+- **Watch list:** the riskiest recent flaw that isn't in KEV is CVE-2024-35286 (Mitel MiCollab, 9.8 Critical, EPSS 66%).
+- The full one-page report is in `reports/data_report.md`.
