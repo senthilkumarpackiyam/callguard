@@ -22,3 +22,27 @@ Before committing to the project, we queried the four live sources for the produ
 - **Nebius:** the AI platform is now called Token Factory; its API address is `https://api.tokenfactory.nebius.com/v1/`.
 - **Setup check:** `scripts/check_setup.py` passes all 8 checks. Nebius lists 28 models, and the LangSmith key is accepted.
 - **NVD API key:** the request form's Cloudflare security check wouldn't load in the browser, so we're continuing without a key. It's optional: it raises the limit from 5 to 50 requests per 30 seconds, and the full pull needs only about 20 requests.
+
+## Phase 1: Meet the data (2026-10-17)
+
+The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel MiCollab path traversal flaw) through all four sources.
+
+- **Correction to the data check:** NVD records now include an `affected` field, which is the vendor's version list copied from CVE.org. With it, version coverage for 2025–26 CVEs rises from 54% (NVD's own CPE analysis) to 89%, and older CVEs stay at 100%. So we read versions from both fields, and a separate CVE.org download isn't needed.
+- **Who provides what:** NVD is the main source: description, CVSS, CWE, CPE, the vendor's version list, KEV's "exploited" flag and tagged links. Only KEV has the ransomware and forensic-triage flags. Only EPSS has the 30-day exploitation forecast.
+- **"Unknown" is not "no":** KEV's ransomware field is either "Known" or "Unknown", and "Unknown" means unconfirmed. It's the same principle as "no CVE found" not meaning "safe".
+- **Version names aren't simple numbers:** Cisco lists versions like `12.6(1)ES1` and `15.0(1)SU2`, so checking a version needs code that understands each vendor's format.
+- **Attribution:** NVD's terms ask apps to show "This product uses the NVD API but is not endorsed or certified by the NVD."
+- **Facts for test questions:** CVE-2024-41713 scores CVSS 9.1 (Critical), CWE-22, and affects MiCollab up to 9.8.1.201. It has been in KEV since 2025-01-07 (federal due date 2025-01-28), ransomware use is Known, EPSS is 97% (99.9th percentile), and it can be chained with CVE-2024-55550. The fix is in Mitel advisory MISA-2024-0029.
+
+### Product scope
+
+- **Decision:** 24 products are in scope: 8 Cisco, 5 Avaya, 7 Mitel, plus Asterisk, FreePBX, Genesys on-prem and Verint. 5 cloud products are recognized and answered with the cloud message (Amazon Connect, NICE CXone, Five9, Genesys Cloud CX, Twilio Flex). 3 are deliberately left out: Cisco Unified IP IVR, Cisco Emergency Responder, and Avaya products from before 2010. The list lives in `config/products.toml`.
+- **Size:** in the data pulled on 2026-10-14, the in-scope products have 740 CVEs: 125 published since 2024, and 11 in KEV.
+- **One product, many names:** Asterisk appears under more than 15 names (Digium became Sangoma, and there are several editions), so each product lists every name it goes by.
+- **Same name, different product:** "CXone" matched OMRON factory software, "Finesse" was also the name of old Cisco firewall software, and "presence" hides inside "TelePresence". So matching uses product fields, with exact names and exclusions, never words in the description.
+- **For Phase 2:** 12 recent CVEs in the pull had no product data at all, so the list can't match them. Phase 2 will try a fallback that looks for the product names in the description.
+
+### Setup lesson: iCloud and the virtual environment
+
+- The project is in `~/Documents`, which iCloud syncs. iCloud marks files whose names start with a dot as hidden, and Python skips hidden `.pth` files, so our own code became invisible to Python.
+- **Fix:** the virtual environment now lives outside iCloud, at `~/.venvs/callguard`, and `.venv` is a shortcut (symlink) to it. This also stops iCloud from uploading about 15,000 package files.

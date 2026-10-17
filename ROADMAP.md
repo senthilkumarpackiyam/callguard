@@ -5,7 +5,7 @@ A learning roadmap for building CallGuard one phase at a time. Each phase ends w
 ## Progress
 
 - [x] Phase 0: Set up your workshop
-- [ ] Phase 1: Meet the data
+- [x] Phase 1: Meet the data
 - [ ] Phase 2: Collect and clean the data
 - [ ] Phase 3: Write the exam first
 - [ ] Phase 4: Make the data searchable
@@ -63,7 +63,7 @@ If they ask about a cloud product or a made-up version, it says it has no matchi
 See NOTES.md for the measurements behind these.
 
 1. Pull specific products (~900 CVEs) instead of everything from each vendor.
-2. Add CVE.org as a fourth source for version data, and check "is my version affected?" in code.
+2. Read version data from both NVD's own analysis and the vendor's list that NVD copies from CVE.org, and check "is my version affected?" in code. (Phase 1 showed that no separate CVE.org download is needed.)
 3. Focus on on-prem and hybrid stacks. Cloud contact-center products get their own refusal message.
 4. Filter by the vendor and product fields, not by words in the description.
 
@@ -103,7 +103,7 @@ See NOTES.md for the measurements behind these.
   - *Paging:* fetching big results in batches.
   - *Rate limit:* the most calls an API allows per minute, like a concurrent-session cap.
   - Why messy data produces bad answers.
-- **You'll do:** write scripts that pull your products from NVD and CVE.org, add KEV and EPSS, tidy each record into readable text, and save it all to one file.
+- **You'll do:** write scripts that pull your products from NVD (which already includes CVE.org's vendor data), add KEV and EPSS, tidy each record into readable text, and save it all to one file.
 - **Done when:** you have ~900 clean records and a one-page data report: counts per product, how many have version data, and how many are being exploited.
 
 ### Phase 3: Write the exam first (~2–3 h)
