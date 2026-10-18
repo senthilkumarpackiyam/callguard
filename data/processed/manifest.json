@@ -1,5 +1,5 @@
 {
-  "collected_at": "2026-10-17T15:15:39+00:00",
+  "collected_at": "2026-10-18T07:19:01+00:00",
   "nvd": {
     "queries": [
       "Cisco",
@@ -20,8 +20,8 @@
       "Twilio"
     ],
     "cves_scanned": 7574,
-    "newest_change": "2026-10-17T12:16:28.720",
-    "synced_through": "2026-10-17T15:15:39+00:00"
+    "newest_change": "2026-10-18T07:16:53.807",
+    "synced_through": "2026-10-18T07:19:01+00:00"
   },
   "kev": {
     "catalog_version": "2026.10.16",

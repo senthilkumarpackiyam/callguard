@@ -230,6 +230,29 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - A browser test that drives Chrome like a user (`scripts/check_website.py`, with Playwright). It covers the list, details, chat, PDF download, email checks and the phone layout: 12 of 12 checks pass.
 - **Bugs found by testing in a real browser:**
   - **Hidden answer buttons.** The screen redraws the answer as it streams in. A redraw still waiting for its turn could paint the half-written answer back over the finished one, hiding its sources, its "Data as of" line and its buttons. This happened only when the last words and the "done" signal arrived together, so it appeared now and then. A test now forces that timing on every run.
-  - **Web codes in 46 records (44 Cisco, 2 Avaya).** NVD's text had "IM &amp; Presence" instead of "IM & Presence", plus non-breaking spaces. Cleaning now decodes only complete codes, so a web address like "?a=1&para=2" stays intact. The 46 records were cleaned and re-indexed, and search scored the same as before (18 of 18 found at least one expected CVE, 16 of 18 found them all).
+  - **Web codes in 46 records (44 Cisco, 2 Avaya).** NVD's text had `IM &amp; Presence` instead of `IM & Presence`, plus non-breaking spaces. Cleaning now decodes only complete codes, so a web address like `?a=1&para=2` stays intact. The 46 records were cleaned and re-indexed, and search scored the same as before (18 of 18 found at least one expected CVE, 16 of 18 found them all).
   - **PDFs.** The logo's two words had a gap, the footer ran into the page number, and "ransomware" broke mid-word in a narrow column.
   - **Phone layout.** The filters were cut off, and the list scrolled inside a short box. On phones the filters now sit two per row, and the list flows with the page, 10 at a time.
+
+## Phase 11: Ship it (2026-10-17, in progress)
+
+- **README:**
+  - Rewritten for graders and anyone who clones the repository. It covers what CallGuard does, the results, how it works (with a diagram), how to run it, what's where, the limitations and the data credits.
+  - Screenshots are in `docs/images/`.
+- **The Google Doc:** a write-up for graders, created in the user's Google Drive: [CallGuard: project write-up](https://docs.google.com/document/d/1GTgWeI7Ie5t2vP36SxNC_umTRYbSmkiGVs5E1ksomho/edit). It covers:
+  - overview, data sources and scope
+  - architecture, chunking and indexing, retrieval and reranking
+  - the full prompts, model choice and evaluation
+  - failure analysis, limitations, next steps and lessons learned
+  - every question's scores (appendix)
+
+  Google's HTML import decodes web codes twice, so the HTML `&amp;amp;` (meant to show `&amp;`) appeared as a plain `&` in the first draft. The text was reworded and the doc re-created.
+- **The video:** `docs/video_script.md` holds a timed 5-minute script and a recording guide. It shows one question of each type, a refusal and a fresh CVE. Every demo question was tested on the live site first: each answered in 0.1 to 3.2 seconds, with the first words after about 1 to 2 seconds.
+- **A bug found while testing the demo questions:**
+  - The question was "CVE-2024-55550 is only rated Low. Can we leave it until last?" The answer said "the code's patch-priority order puts it first", which is wrong: CVE-2024-41713 has the higher exploit forecast.
+  - **Cause:** the CVE named in the question is found first, and code passed that search order to the model as "the patch-priority order".
+  - **Fix:** the order is now always sorted by the rule (`answer.patch_order`), leaving out CVEs that don't affect the version asked about. Two tests cover it, for 37 in all. The answer now says CVE-2024-55550 is third.
+- **Tidying:**
+  - Scanned the whole Git history for keys: none, and `.env` was never committed.
+  - Removed an empty folder iCloud had left behind (`.venv 2`).
+  - Silenced a deprecation notice from inside the langsmith library in the test output.

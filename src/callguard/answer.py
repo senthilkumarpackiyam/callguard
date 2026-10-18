@@ -16,7 +16,7 @@ from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 
 from callguard.index import ROOT
-from callguard.retrieve import Retriever
+from callguard.retrieve import Retriever, priority_key
 from callguard.understand import CVE_ID
 
 # Chosen in Phase 6 (reports/model_comparison.md): as accurate as the best, all refusals safe, and fast.
@@ -26,6 +26,14 @@ MAX_TOKENS = 4000
 # Harmless: Nebius returns one response field in a shape the OpenAI library doesn't expect when tracing copies it
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings", category=UserWarning)
 NVD_PAGE = "https://nvd.nist.gov/vuln/detail/{}"
+
+
+def patch_order(hits):
+    """The records' CVE numbers in patch-priority order, whatever order search found them in (a CVE named in the
+    question comes first in the hits, but not necessarily first to patch). Ones that don't affect the version
+    asked about are left out."""
+    relevant = [h for h in hits if not (h.version_check and h.version_check["status"] == "not affected")]
+    return [h.record["id"] for h in sorted(relevant, key=lambda h: priority_key(h.record), reverse=True)]
 
 SYSTEM_PROMPT = """You are CallGuard, an assistant that answers questions about known security vulnerabilities (CVEs) \
 in contact-center and unified-communications products, for Tier 2 support engineers and solution architects.
@@ -137,7 +145,7 @@ class Answerer:
                  f"Version asked about: {u.version}" if u.version else "",
                  "The question is about the user's own systems, which CallGuard can't see." if u.internal else "",
                  "Patch-priority order worked out by code (known exploited first, then highest exploit forecast, "
-                 "then highest severity): " + ", ".join(h.record["id"] for h in hits) if u.priority else "",
+                 "then highest severity): " + ", ".join(patch_order(hits)) if u.priority else "",
                  f"No CVEs in CallGuard's data were published in the past {u.recent_days} days (since "
                  f"{u.window_start}). The records below are the newest overall." if u.window_empty else "",
                  "Records are listed newest first." if u.recent and not u.window_empty else "", *extra_notes]
