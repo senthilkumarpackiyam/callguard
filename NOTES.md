@@ -256,3 +256,14 @@ The notebook `notebooks/01_meet_the_data.ipynb` follows CVE-2024-41713 (a Mitel 
   - Scanned the whole Git history for keys: none, and `.env` was never committed.
   - Removed an empty folder iCloud had left behind (`.venv 2`).
   - Silenced a deprecation notice from inside the langsmith library in the test output.
+- **Tested the way an evaluator would run it:** a fresh copy cloned from GitHub into a temporary folder, with only a Nebius key.
+  - Install worked.
+  - The setup check passed 8 of 8, and all 37 tests passed.
+  - Building the index took 91 seconds and 192,693 embedding tokens.
+  - A question from the command line answered in 3 seconds.
+  - The website (on a spare port) loaded its list, downloads and a streamed answer.
+- **Fixes from that test**, so a fresh copy runs quietly without LangSmith:
+  - Without a LangSmith key, tracing now switches itself off (`callguard.load_settings`). Before, copying `.env.example` as-is printed a LangSmith warning on every run.
+  - The setup check and `scripts/ask.py` now say plainly that LangSmith is optional, instead of showing "LangSmithAuthError".
+  - `.env.example` labels each key as required or optional.
+  - `scripts/ask.py` retries the replay-link lookup for a few seconds, because a very fast answer could be looked up before LangSmith had saved it.

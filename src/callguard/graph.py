@@ -18,18 +18,17 @@ import re
 import time
 from typing import TypedDict
 
-from dotenv import load_dotenv
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 
+from callguard import load_settings
 from callguard.answer import Answer, Answerer
-from callguard.index import ROOT
 from callguard.retrieve import Retriever
 from callguard.understand import Understanding, understand
 
-load_dotenv(ROOT / ".env")  # before anything traces: LangSmith reads its settings from the environment
+load_settings()  # before anything traces: LangSmith reads its settings from the environment
 
 K = 5
 # Search questions get more records: on the exam (Phase 9), 8 records raised context recall from 89% to 95%

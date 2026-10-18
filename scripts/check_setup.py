@@ -96,7 +96,7 @@ def nebius():
 
 def langsmith():
     if not os.getenv("LANGSMITH_API_KEY"):
-        report(TODO, "LangSmith", "add LANGSMITH_API_KEY to .env")
+        report(PASS, "LangSmith", "optional: no key, so tracing is off (LANGSMITH_API_KEY turns it on)")
         return
     next(iter(Client().list_projects(limit=1)), None)  # raises if the key is rejected
     report(PASS, "LangSmith", "key accepted")

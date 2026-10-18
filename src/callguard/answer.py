@@ -11,11 +11,10 @@ import warnings
 from dataclasses import dataclass, field
 from datetime import date
 
-from dotenv import load_dotenv
 from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 
-from callguard.index import ROOT
+from callguard import load_settings
 from callguard.retrieve import Retriever, priority_key
 from callguard.understand import CVE_ID
 
@@ -85,7 +84,7 @@ class Answer:
 
 class Answerer:
     def __init__(self, model=DEFAULT_MODEL, retriever=None):
-        load_dotenv(ROOT / ".env")
+        load_settings()
         self.model = model
         self.retriever = retriever or Retriever()
         # wrap_openai records every model call in LangSmith (when tracing is on): prompt, answer, tokens, time

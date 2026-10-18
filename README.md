@@ -114,13 +114,15 @@ Two more keys are optional: a [LangSmith](https://smith.langchain.com) key for t
 git clone https://github.com/senthilkumarpackiyam/callguard.git
 cd callguard
 uv sync
-cp .env.example .env              # put your keys in .env (no LangSmith key? set LANGSMITH_TRACING=false)
+cp .env.example .env              # put your Nebius key in .env (the LangSmith and NVD keys are optional)
 uv run scripts/check_setup.py     # checks Python, .env, the four data sources, Nebius and LangSmith
 uv run scripts/build_index.py     # embeds the records and builds the search index (about 2 minutes)
 uv run scripts/serve.py           # then open http://localhost:8000
 ```
 
-The repository includes the clean records (`data/processed/`), so you can build the index straight away. To refresh the data:
+The repository includes the clean records (`data/processed/`), so you can build the index straight away. Building it embeds all 895 records once: about 1.5 minutes and about 193,000 embedding tokens on Nebius. Without a Nebius key, you can still run the tests (`uv run pytest`) and read the reports, but not ask questions.
+
+To refresh the data:
 
 ```bash
 uv run scripts/sync.py               # fetch what changed since the data was collected
